@@ -1,0 +1,320 @@
+import type { Room, Booking, Notification, User, MaintenanceSchedule, BookingConflict, UtilizationData, DepartmentUsage } from '@/types';
+
+export const mockRooms: Room[] = [
+  {
+    id: '1',
+    name: 'Executive Conference Room',
+    location: 'Floor 5, West Wing',
+    floor: '5',
+    capacity: 12,
+    type: 'Conference',
+    status: 'available',
+    description: 'Large conference room with modern amenities, perfect for executive meetings and presentations.',
+    equipment: ['Projector', 'Whiteboard', 'Video Conference', 'WiFi'],
+    image: 'https://images.unsplash.com/photo-1703355685952-03ed19f70f51?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBvZmZpY2UlMjBtZWV0aW5nJTIwcm9vbXxlbnwxfHx8fDE3NjAzMzc0Njd8MA&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+  {
+    id: '2',
+    name: 'Huddle Room A',
+    location: 'Floor 3, East Wing',
+    floor: '3',
+    capacity: 4,
+    type: 'Huddle',
+    status: 'booked',
+    description: 'Cozy room for small team discussions and quick meetings.',
+    equipment: ['TV Screen', 'Whiteboard', 'WiFi'],
+    image: 'https://images.unsplash.com/photo-1716703432377-0f8e64f7914c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25mZXJlbmNlJTIwcm9vbSUyMGludGVyaW9yfGVufDF8fHx8MTc2MDMzNzQ2OHww&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+  {
+    id: '3',
+    name: 'Innovation Lab',
+    location: 'Floor 4, Central',
+    floor: '4',
+    capacity: 8,
+    type: 'Lab',
+    status: 'available',
+    description: 'Creative space with flexible seating for brainstorming sessions.',
+    equipment: ['Digital Whiteboard', 'Video Conference', 'WiFi', 'Speakers'],
+    image: 'https://images.unsplash.com/photo-1572521165329-b197f9ea3da6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvZmZpY2UlMjB3b3Jrc3BhY2UlMjBlbXB0eXxlbnwxfHx8fDE3NjAzMzc0Njh8MA&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+  {
+    id: '4',
+    name: 'Board Room',
+    location: 'Floor 6, North Wing',
+    floor: '6',
+    capacity: 16,
+    type: 'Board Room',
+    status: 'maintenance',
+    description: 'Premium board room for high-level meetings and presentations.',
+    equipment: ['Projector', 'Video Conference', 'Whiteboard', 'WiFi', 'Conference Phone'],
+    image: 'https://images.unsplash.com/photo-1656646424292-cf207f3f1749?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvZmZpY2UlMjBib2FyZHJvb218ZW58MXx8fHwxNzYwMjg5Mjg5fDA&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+  {
+    id: '5',
+    name: 'Training Room',
+    location: 'Floor 2, West Wing',
+    floor: '2',
+    capacity: 20,
+    type: 'Training',
+    status: 'available',
+    description: 'Spacious room designed for training sessions and workshops.',
+    equipment: ['Projector', 'Whiteboard', 'WiFi', 'Speakers', 'Microphone'],
+    image: 'https://images.unsplash.com/photo-1716703432377-0f8e64f7914c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25mZXJlbmNlJTIwcm9vbSUyMGludGVyaW9yfGVufDF8fHx8MTc2MDMzNzQ2OHww&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+  {
+    id: '6',
+    name: 'Huddle Room B',
+    location: 'Floor 3, West Wing',
+    floor: '3',
+    capacity: 4,
+    type: 'Huddle',
+    status: 'available',
+    description: 'Quick meeting space for small teams.',
+    equipment: ['TV Screen', 'WiFi'],
+    image: 'https://images.unsplash.com/photo-1661169399398-dd271af8f651?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMG1lZXRpbmclMjByb29tfGVufDF8fHx8MTc2MDMzOTA1OHww&ixlib=rb-4.1.0&q=80&w=1080',
+  },
+];
+
+export const mockBookings: Booking[] = [
+  {
+    id: '1',
+    roomId: '1',
+    roomName: 'Executive Conference Room',
+    userId: 'user-1',
+    userName: 'John Doe',
+    userDepartment: 'Engineering',
+    date: '2025-10-15',
+    startTime: '10:00',
+    endTime: '11:00',
+    purpose: 'Q4 Planning Meeting',
+    teamMembers: ['Alice Johnson', 'Bob Smith'],
+    status: 'upcoming',
+    createdAt: '2025-10-13T08:00:00Z',
+  },
+  {
+    id: '2',
+    roomId: '3',
+    roomName: 'Innovation Lab',
+    userId: 'user-1',
+    userName: 'John Doe',
+    userDepartment: 'Engineering',
+    date: '2025-10-14',
+    startTime: '14:00',
+    endTime: '15:30',
+    purpose: 'Product Brainstorming',
+    teamMembers: ['Charlie Davis', 'Diana Wilson'],
+    status: 'upcoming',
+    createdAt: '2025-10-12T10:30:00Z',
+  },
+  {
+    id: '3',
+    roomId: '2',
+    roomName: 'Huddle Room A',
+    userId: 'user-1',
+    userName: 'John Doe',
+    userDepartment: 'Engineering',
+    date: '2025-10-10',
+    startTime: '09:00',
+    endTime: '10:00',
+    purpose: 'Sprint Planning',
+    teamMembers: ['Eve Martinez'],
+    status: 'completed',
+    createdAt: '2025-10-08T15:00:00Z',
+  },
+  {
+    id: '4',
+    roomId: '1',
+    roomName: 'Executive Conference Room',
+    userId: 'user-2',
+    userName: 'Sarah Williams',
+    userDepartment: 'Marketing',
+    date: '2025-10-14',
+    startTime: '09:00',
+    endTime: '10:30',
+    purpose: 'Marketing Campaign Review',
+    teamMembers: ['Tom Harris'],
+    status: 'upcoming',
+    createdAt: '2025-10-13T11:00:00Z',
+  },
+  {
+    id: '5',
+    roomId: '5',
+    roomName: 'Training Room',
+    userId: 'user-3',
+    userName: 'Michael Chen',
+    userDepartment: 'HR',
+    date: '2025-10-16',
+    startTime: '13:00',
+    endTime: '17:00',
+    purpose: 'New Employee Orientation',
+    teamMembers: [],
+    status: 'upcoming',
+    createdAt: '2025-10-12T14:00:00Z',
+  },
+];
+
+export const mockNotifications: Notification[] = [
+  {
+    id: '1',
+    type: 'confirmation',
+    title: 'Booking Confirmed',
+    message: 'Your booking for Executive Conference Room on Oct 15 at 10:00 AM has been confirmed.',
+    timestamp: '2025-10-13T08:01:00Z',
+    read: false,
+  },
+  {
+    id: '2',
+    type: 'reminder',
+    title: 'Meeting Reminder',
+    message: 'You have a meeting in Innovation Lab tomorrow at 2:00 PM.',
+    timestamp: '2025-10-13T09:00:00Z',
+    read: false,
+  },
+  {
+    id: '3',
+    type: 'confirmation',
+    title: 'Booking Confirmed',
+    message: 'Your booking for Innovation Lab on Oct 14 at 2:00 PM has been confirmed.',
+    timestamp: '2025-10-12T10:31:00Z',
+    read: true,
+  },
+];
+
+export const mockUsers: User[] = [
+  {
+    id: 'user-1',
+    name: 'John Doe',
+    email: 'john.doe@company.com',
+    department: 'Engineering',
+    role: 'employee',
+    status: 'active',
+    createdAt: '2024-01-15T00:00:00Z',
+  },
+  {
+    id: 'user-2',
+    name: 'Sarah Williams',
+    email: 'sarah.williams@company.com',
+    department: 'Marketing',
+    role: 'employee',
+    status: 'active',
+    createdAt: '2024-02-20T00:00:00Z',
+  },
+  {
+    id: 'user-3',
+    name: 'Michael Chen',
+    email: 'michael.chen@company.com',
+    department: 'HR',
+    role: 'employee',
+    status: 'active',
+    createdAt: '2024-03-10T00:00:00Z',
+  },
+  {
+    id: 'admin-1',
+    name: 'Admin User',
+    email: 'admin@company.com',
+    department: 'IT',
+    role: 'admin',
+    status: 'active',
+    createdAt: '2023-12-01T00:00:00Z',
+  },
+  {
+    id: 'user-4',
+    name: 'Emily Rodriguez',
+    email: 'emily.rodriguez@company.com',
+    department: 'Sales',
+    role: 'employee',
+    status: 'active',
+    createdAt: '2024-04-05T00:00:00Z',
+  },
+  {
+    id: 'user-5',
+    name: 'David Kim',
+    email: 'david.kim@company.com',
+    department: 'Finance',
+    role: 'employee',
+    status: 'inactive',
+    createdAt: '2024-01-20T00:00:00Z',
+  },
+];
+
+export const mockMaintenance: MaintenanceSchedule[] = [
+  {
+    id: 'm-1',
+    roomId: '4',
+    roomName: 'Board Room',
+    startDate: '2025-10-13',
+    endDate: '2025-10-15',
+    reason: 'AV System Upgrade',
+    status: 'in-progress',
+  },
+  {
+    id: 'm-2',
+    roomId: '5',
+    roomName: 'Training Room',
+    startDate: '2025-10-20',
+    endDate: '2025-10-21',
+    reason: 'Carpet Replacement',
+    status: 'scheduled',
+  },
+];
+
+export const mockConflicts: BookingConflict[] = [
+  {
+    id: 'c-1',
+    roomId: '2',
+    roomName: 'Huddle Room A',
+    date: '2025-10-14',
+    timeRange: '10:00 - 11:00',
+    bookings: mockBookings.filter(b => b.roomId === '2').slice(0, 2),
+  },
+];
+
+export const mockUtilization: UtilizationData[] = [
+  {
+    roomId: '1',
+    roomName: 'Executive Conference Room',
+    totalHours: 80,
+    bookedHours: 62,
+    utilizationRate: 77.5,
+  },
+  {
+    roomId: '2',
+    roomName: 'Huddle Room A',
+    totalHours: 80,
+    bookedHours: 45,
+    utilizationRate: 56.3,
+  },
+  {
+    roomId: '3',
+    roomName: 'Innovation Lab',
+    totalHours: 80,
+    bookedHours: 38,
+    utilizationRate: 47.5,
+  },
+  {
+    roomId: '5',
+    roomName: 'Training Room',
+    totalHours: 80,
+    bookedHours: 52,
+    utilizationRate: 65.0,
+  },
+];
+
+export const mockDepartmentUsage: DepartmentUsage[] = [
+  { department: 'Engineering', bookingCount: 45, totalHours: 120 },
+  { department: 'Marketing', bookingCount: 32, totalHours: 85 },
+  { department: 'HR', bookingCount: 28, totalHours: 95 },
+  { department: 'Sales', bookingCount: 35, totalHours: 78 },
+  { department: 'Finance', bookingCount: 22, totalHours: 52 },
+];
+
+export const generateTimeSlots = (): string[] => {
+  const slots: string[] = [];
+  for (let hour = 8; hour <= 18; hour++) {
+    slots.push(`${hour.toString().padStart(2, '0')}:00`);
+    if (hour < 18) {
+      slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+  }
+  return slots;
+};
