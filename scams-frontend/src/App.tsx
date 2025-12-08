@@ -2,76 +2,73 @@
  * Room Booking System - Main Application
  * Comprehensive booking system with revolutionary features
  */
-import { useState, useEffect } from "react";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { NetworkStatus } from "./components/NetworkStatus";
-import { HeroPage } from "./components/HeroPage";
-import { LoginPage } from "./components/LoginPage";
-import { ForgotPassword } from "./components/ForgotPassword";
+import {
+  Bell,
+  Calendar,
+  Home,
+  LogOut,
+  Plus,
+  Search,
+  User as UserIcon
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { AIAssistant } from "./components/AIAssistant";
 import {
   CommandPalette,
   useCommandPalette,
 } from "./components/CommandPalette";
+import { SignUpPage, type SignUpData } from "./components/SignUpPage";
+import { CreateBooking } from "./components/CreateBooking";
 import { CursorFollower } from "./components/CursorFollower";
-import { FloatingActionButton } from "./components/FloatingActionButton";
-import { ParticleNetwork } from "./components/ParticleNetwork";
-import { SmartTheme } from "./components/SmartTheme";
-import { AIAssistant } from "./components/AIAssistant";
-import { RealtimeActivity } from "./components/RealtimeActivity";
-import { PerformanceToggle } from "./components/PerformanceToggle";
-import { safeStorage } from "./utils/safeStorage";
-import {
-  Home,
-  Search,
-  Calendar,
-  Bell,
-  User as UserIcon,
-  Building2,
-  ChartColumn,
-  Settings,
-  LogOut,
-  Plus,
-} from "lucide-react";
 import { Dashboard } from "./components/Dashboard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { FloatingActionButton } from "./components/FloatingActionButton";
+import { ForgotPassword } from "./components/ForgotPassword";
+import { HeroPage } from "./components/HeroPage";
+import { LoginPage } from "./components/LoginPage";
+import { MyBookings } from "./components/MyBookings";
+import { NetworkStatus } from "./components/NetworkStatus";
+import { NotificationsComponent } from "./components/Notifications";
 import { Overview } from "./components/Overview";
+import { ParticleNetwork } from "./components/ParticleNetwork";
+import { PerformanceToggle } from "./components/PerformanceToggle";
+import { Profile } from "./components/Profile";
+import { RealtimeActivity } from "./components/RealtimeActivity";
 import { RoomBrowser } from "./components/RoomBrowser";
 import { RoomDetails } from "./components/RoomDetails";
-import { MyBookings } from "./components/MyBookings";
-import { CreateBooking } from "./components/CreateBooking";
-import { NotificationsComponent } from "./components/Notifications";
-import { Profile } from "./components/Profile";
+import { SmartTheme } from "./components/SmartTheme";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminOverview } from "./components/admin/AdminOverview";
-import { RoomManagement } from "./components/admin/RoomManagement";
-import { BookingManagement } from "./components/admin/BookingManagement";
-import { UserManagement } from "./components/admin/UserManagement";
-import { Analytics } from "./components/admin/Analytics";
 import { AdminSettings } from "./components/admin/AdminSettings";
+import { Analytics } from "./components/admin/Analytics";
+import { BookingManagement } from "./components/admin/BookingManagement";
+import { RoomManagement } from "./components/admin/RoomManagement";
+import { UserManagement } from "./components/admin/UserManagement";
+import { ChangePasswordDialog } from "./components/dialogs/ChangePasswordDialog";
 import { EditBookingDialog } from "./components/dialogs/EditBookingDialog";
+import { MaintenanceDialog } from "./components/dialogs/MaintenanceDialog";
 import { RoomFormDialog } from "./components/dialogs/RoomFormDialog";
 import { UserFormDialog } from "./components/dialogs/UserFormDialog";
-import { MaintenanceDialog } from "./components/dialogs/MaintenanceDialog";
-import { ChangePasswordDialog } from "./components/dialogs/ChangePasswordDialog";
 import { Toaster } from "./components/ui/sonner";
-import { toast } from "sonner";
-import type { Booking, Room, User, Notification, MaintenanceSchedule } from "./types";
 import {
-  mockRooms,
   mockBookings,
-  mockNotifications,
-  mockUsers,
-  mockMaintenance,
   mockConflicts,
-  mockUtilization,
   mockDepartmentUsage,
+  mockMaintenance,
+  mockNotifications,
+  mockRooms,
+  mockUsers,
+  mockUtilization,
 } from "./data/mockData";
+import type { Booking, MaintenanceSchedule, Notification, Room, User } from "./types";
 import {
   exportBookingsCSV,
-  exportRoomsCSV,
-  exportUsersCSV,
-  exportUtilizationCSV,
   exportDepartmentUsageCSV,
+  exportRoomsCSV,
+  exportUtilizationCSV
 } from "./utils/exportUtils";
+import { safeStorage } from "./utils/safeStorage";
 
 type View =
   | "hero"
@@ -90,7 +87,8 @@ type View =
   | "admin-users"
   | "admin-analytics"
   | "admin-notifications"
-  | "admin-settings";
+  | "admin-settings"
+  | "signup";
 
 export default function App() {
   // Auth state - Room Booking System
@@ -682,6 +680,7 @@ export default function App() {
           onForgotPassword={() =>
             setCurrentView("forgot-password")
           }
+          onSignUp={() => setCurrentView("signup")}
         />
         <PerformanceToggle />
         <Toaster />
@@ -695,6 +694,35 @@ export default function App() {
         {isHighPerf && <CursorFollower />}
         <ForgotPassword
           onBack={() => setCurrentView("login")}
+        />
+        <PerformanceToggle />
+        <Toaster />
+      </ErrorBoundary>
+    );
+  }
+
+  if (currentView === "signup") {
+    return (
+      <ErrorBoundary>
+        {isHighPerf && <CursorFollower />}
+        {isHighPerf && <ParticleNetwork />}
+        <SignUpPage
+          onSignUp={(data: SignUpData) => {
+            // Mock sign up - Here you would send data to backend
+            const newUser: User = {
+              id: `user-${Date.now()}`,
+              name: data.fullName,
+              email: data.email,
+              department: data.department,
+              role: "employee",
+              status: "active",
+              createdAt: new Date().toISOString(),
+            };
+            setUsers((prev) => [...prev, newUser]);
+            setUser(newUser);
+            setCurrentView("overview");
+          }}
+          onBackToLogin={() => setCurrentView("login")}
         />
         <PerformanceToggle />
         <Toaster />

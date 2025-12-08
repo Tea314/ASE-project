@@ -10,9 +10,10 @@ import { AnimatedButton } from './AnimatedButton';
 interface LoginPageProps {
   onLogin: (email: string, password: string) => void;
   onForgotPassword: () => void;
+  onSignUp?: () => void;
 }
 
-export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
+export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -51,13 +52,13 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
       >
         <Card className="border-border/50 backdrop-blur-sm">
           <CardHeader className="space-y-3 text-center">
-            <motion.div 
+            <motion.div
               className="flex justify-center"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             >
-              <motion.div 
+              <motion.div
                 className="p-3 bg-primary rounded-lg"
                 whileHover={{ rotate: 360, scale: 1.1 }}
                 transition={{ duration: 0.5 }}
@@ -76,7 +77,7 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <motion.div 
+              <motion.div
                 className="space-y-4"
                 initial="hidden"
                 animate="visible"
@@ -91,7 +92,7 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   },
                 }}
               >
-                <motion.div 
+                <motion.div
                   className="space-y-2"
                   variants={{
                     hidden: { opacity: 0, x: -20 },
@@ -113,7 +114,7 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   </div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   className="space-y-2"
                   variants={{
                     hidden: { opacity: 0, x: -20 },
@@ -173,6 +174,26 @@ export function LoginPage({ onLogin, onForgotPassword }: LoginPageProps) {
                   <p>Demo accounts:</p>
                   <p>user@company.com or admin@company.com</p>
                 </motion.div>
+
+                {onSignUp && (
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: { opacity: 1 },
+                    }}
+                    className="text-center text-sm"
+                  >
+                    <span className="text-muted-foreground">Don&apos;t have an account? </span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={onSignUp}
+                      className="p-0 h-auto"
+                    >
+                      Sign up
+                    </Button>
+                  </motion.div>
+                )}
               </motion.div>
             </form>
           </CardContent>
