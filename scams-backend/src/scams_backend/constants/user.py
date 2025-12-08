@@ -1,3 +1,7 @@
-ROLE_STUDENT = "student"
-ROLE_TEACHER = "teacher"
-ROLE_ADMIN = "admin"
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    STUDENT = "student"
+    TEACHER = "teacher"
+    ADMIN = "admin"

@@ -28,7 +28,7 @@ class UserSignUpService:
         self.user = User(
             email=self.signup_request.email,
             hashed_password=hashed_password,
-            full_name=self.signup_request.full_name,
+            role=self.signup_request.role,
         )
         self.db_session.add(self.user)
         self.db_session.commit()

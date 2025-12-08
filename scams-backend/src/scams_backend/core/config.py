@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
 
     # Database settings
@@ -8,7 +9,9 @@ class Settings(BaseSettings):
     DB_HOST: str = "localhost"
     DB_PORT: int = 5433
     DB_NAME: str = "postgres"
-    
+
+    SECRET_KEY: str = "your_secret_key"
+
     class Config:
         env_file = ".env"
         extra = "ignore"
