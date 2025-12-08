@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface AnimatedListProps {
   children: ReactNode[];

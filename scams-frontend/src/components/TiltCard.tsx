@@ -1,4 +1,4 @@
-import { useRef, useState, ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 
 interface TiltCardProps {
@@ -8,11 +8,11 @@ interface TiltCardProps {
   glareEffect?: boolean;
 }
 
-export function TiltCard({ 
-  children, 
-  className = '', 
+export function TiltCard({
+  children,
+  className = '',
   tiltAmount = 15,
-  glareEffect = true 
+  glareEffect = true
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -64,7 +64,7 @@ export function TiltCard({
       className={`relative ${className}`}
     >
       {children}
-      
+
       {glareEffect && isHovered && (
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-lg"

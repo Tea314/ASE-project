@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface PageTransitionProps {
   children: ReactNode;
@@ -38,8 +38,8 @@ export function FadeIn({ children, delay = 0 }: { children: ReactNode; delay?: n
   );
 }
 
-export function SlideIn({ children, delay = 0, direction = 'left' }: { 
-  children: ReactNode; 
+export function SlideIn({ children, delay = 0, direction = 'left' }: {
+  children: ReactNode;
   delay?: number;
   direction?: 'left' | 'right' | 'up' | 'down';
 }) {

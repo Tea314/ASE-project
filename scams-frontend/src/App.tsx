@@ -18,9 +18,7 @@ import {
   CommandPalette,
   useCommandPalette,
 } from "./components/CommandPalette";
-import { SignUpPage, type SignUpData } from "./components/SignUpPage";
 import { CreateBooking } from "./components/CreateBooking";
-import { CursorFollower } from "./components/CursorFollower";
 import { Dashboard } from "./components/Dashboard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { FloatingActionButton } from "./components/FloatingActionButton";
@@ -37,6 +35,7 @@ import { Profile } from "./components/Profile";
 import { RealtimeActivity } from "./components/RealtimeActivity";
 import { RoomBrowser } from "./components/RoomBrowser";
 import { RoomDetails } from "./components/RoomDetails";
+import { SignUpPage, type SignUpData } from "./components/SignUpPage";
 import { SmartTheme } from "./components/SmartTheme";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { AdminOverview } from "./components/admin/AdminOverview";
@@ -658,7 +657,6 @@ export default function App() {
     return (
       <ErrorBoundary>
         <NetworkStatus />
-        {isHighPerf && <CursorFollower />}
         {isHighPerf && <ParticleNetwork />}
         <HeroPage
           onGetStarted={() => setCurrentView("login")}
@@ -673,7 +671,6 @@ export default function App() {
   if (currentView === "login") {
     return (
       <ErrorBoundary>
-        {isHighPerf && <CursorFollower />}
         {isHighPerf && <ParticleNetwork />}
         <LoginPage
           onLogin={handleLogin}
@@ -691,7 +688,6 @@ export default function App() {
   if (currentView === "forgot-password") {
     return (
       <ErrorBoundary>
-        {isHighPerf && <CursorFollower />}
         <ForgotPassword
           onBack={() => setCurrentView("login")}
         />
@@ -704,7 +700,6 @@ export default function App() {
   if (currentView === "signup") {
     return (
       <ErrorBoundary>
-        {isHighPerf && <CursorFollower />}
         {isHighPerf && <ParticleNetwork />}
         <SignUpPage
           onSignUp={(data: SignUpData) => {
@@ -740,7 +735,6 @@ export default function App() {
   if (user.role === "admin") {
     return (
       <ErrorBoundary>
-        {isHighPerf && <CursorFollower />}
         {isHighPerf && <ParticleNetwork />}
         <SmartTheme />
         <PerformanceToggle />
@@ -883,7 +877,6 @@ export default function App() {
   // Employee Dashboard
   return (
     <ErrorBoundary>
-      {isHighPerf && <CursorFollower />}
       {isHighPerf && <ParticleNetwork />}
       <SmartTheme />
       <PerformanceToggle />

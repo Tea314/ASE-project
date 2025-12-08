@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
-import { ReactNode, ComponentProps } from 'react';
+import type { ReactNode, ComponentProps } from 'react';
 
 interface AnimatedButtonProps extends ComponentProps<typeof Button> {
   children: ReactNode;
@@ -8,12 +8,12 @@ interface AnimatedButtonProps extends ComponentProps<typeof Button> {
   glow?: boolean;
 }
 
-export function AnimatedButton({ 
-  children, 
+export function AnimatedButton({
+  children,
   magnetic = false,
   glow = false,
   className = '',
-  ...props 
+  ...props
 }: AnimatedButtonProps) {
   return (
     <motion.div
@@ -21,7 +21,7 @@ export function AnimatedButton({
       whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      <Button 
+      <Button
         className={`relative overflow-hidden ${glow ? 'shadow-lg' : ''} ${className}`}
         {...props}
       >

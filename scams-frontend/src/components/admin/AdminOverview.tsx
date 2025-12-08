@@ -1,10 +1,10 @@
 import { motion } from 'motion/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Building2, Calendar, AlertTriangle, TrendingUp, Clock } from 'lucide-react';
 import type { Room, Booking, BookingConflict, MaintenanceSchedule } from '@/types';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '../ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { QuickBookingCalendar } from '../QuickBookingCalendar';
 import { QuickActions } from '../QuickActions';
 import { RoomCheckInOut } from '../RoomCheckInOut';
