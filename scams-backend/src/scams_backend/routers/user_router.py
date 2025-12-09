@@ -14,7 +14,7 @@ from scams_backend.services.user.user_signup_service import UserSignUpService
 from scams_backend.services.user.user_signin_service import UserSignInService
 import jwt
 
-router = APIRouter(prefix="/user", tags=["User"])
+router = APIRouter(tags=["User"])
 
 
 @router.post(
