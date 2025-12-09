@@ -1,5 +1,5 @@
 from scams_backend.core.config import settings
-from fastapi import APIRouter, status, Response
+from fastapi import APIRouter, status, Response, Depends
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from scams_backend.schemas.user.user_signin_schema import (
@@ -10,8 +10,10 @@ from scams_backend.schemas.user.user_signup_schema import (
     UserSignUpRequest,
     UserSignUpResponse,
 )
+from scams_backend.schemas.user.user_claims import UserClaims
 from scams_backend.services.user.user_signup_service import UserSignUpService
 from scams_backend.services.user.user_signin_service import UserSignInService
+from scams_backend.dependencies.auth import get_current_user
 import jwt
 
 router = APIRouter(tags=["User"])
@@ -55,3 +57,8 @@ async def signin(request: Request, signin_request: UserSignInRequest) -> Respons
         samesite="lax",
     )
     return response
+
+
+@router.get("/test-claims", status_code=status.HTTP_200_OK, response_class=JSONResponse)
+async def test_claims(current_user=Depends(get_current_user)) -> UserClaims:
+    return current_user

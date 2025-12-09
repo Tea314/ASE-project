@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DB_NAME: str = "postgres"
 
     SECRET_KEY: str = "your_secret_key"
+    JWT_ALGORITHM: str = "HS256"
 
     class Config:
         env_file = ".env"
