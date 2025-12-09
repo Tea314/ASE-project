@@ -59,6 +59,6 @@ async def signin(request: Request, signin_request: UserSignInRequest) -> Respons
     return response
 
 
-@router.get("/test-claims", status_code=status.HTTP_200_OK, response_class=JSONResponse)
-async def test_claims(current_user=Depends(get_current_user)) -> UserClaims:
+@router.get("/", status_code=status.HTTP_200_OK, response_class=JSONResponse)
+async def get_user_claims(current_user=Depends(get_current_user)) -> UserClaims:
     return current_user

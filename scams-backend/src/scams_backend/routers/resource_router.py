@@ -1,5 +1,4 @@
-from scams_backend.core.config import settings
-from fastapi import APIRouter, status, Response, Depends
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from scams_backend.dependencies.auth import get_current_user
