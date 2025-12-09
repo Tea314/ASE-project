@@ -40,14 +40,17 @@ make docker-up
 docker-compose -f ./docker/docker-compose.yml up -d
 ```
 
-### 5. Run database migrations
+### 5. Setup database (migration and seeding)
 
 ```bash
 
 # Using Makefile
-make migrate
+make setup
 # Or directly
 poetry run alembic upgrade head
+docker exec -i postgres-db psql -U your_user -d template1 -c "DROP DATABASE IF EXISTS postgres;"
+docker exec -i postgres-db psql -U your_user -d template1 -c "CREATE DATABASE postgres;"
+docker exec -i postgres-db psql -U your_user -d postgres < ./docker/init.sql
 ```
 
 ### 6. Start the backend server
@@ -76,5 +79,3 @@ poetry run uvicorn src.scams_backend.main:app --reload
 - If migrations fail, check Alembic config and DB connection
 
 ---
-
-For more details, see the documentation in each source folder.
