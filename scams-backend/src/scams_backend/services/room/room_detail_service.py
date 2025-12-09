@@ -17,10 +17,13 @@ class RoomDetailService:
         stmt = (
             select(
                 Room.id,
+                Room.building_id,
+                Room.image_url,
                 Room.name,
                 Room.floor_number,
                 Room.capacity,
                 Building.name.label("building_name"),
+                Device.id.label("device_id"),
                 Device.name.label("device_name"),
             )
             .join(Building, Room.building_id == Building.id)
@@ -35,15 +38,18 @@ class RoomDetailService:
             return
 
         room_info = results[0]
-        device_names = [row.device_name for row in results]
+
+        devices = [{"id": row.device_id, "name": row.device_name} for row in results]
 
         self.room_detail = {
             "id": room_info.id,
             "name": room_info.name,
+            "image_url": room_info.image_url,
+            "building_id": room_info.building_id,
             "floor_number": room_info.floor_number,
             "capacity": room_info.capacity,
             "building_name": room_info.building_name,
-            "devices": device_names,
+            "devices": devices,
         }
 
     def invoke(self) -> RoomDetailResponse:
