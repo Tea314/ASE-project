@@ -10,14 +10,14 @@ from scams_backend.services.room.room_schedule_service import RoomScheduleServic
 from scams_backend.schemas.user.user_claims import UserClaims
 from scams_backend.schemas.room.room_schedule_schema import RoomScheduleResponse
 
-router = APIRouter(tags=["Rooms"])
+router = APIRouter(tags=["Rooms"], prefix="/rooms")
 
 
 from typing import Optional, List
 import datetime
 
 
-@router.get("/rooms", status_code=status.HTTP_200_OK, response_class=JSONResponse)
+@router.get("/", status_code=status.HTTP_200_OK, response_class=JSONResponse)
 async def list_rooms(
     request: Request,
     current_user: UserClaims = Depends(get_current_user),
@@ -41,22 +41,20 @@ async def list_rooms(
         end_time=end_time,
         limit=limit,
         offset=offset,
-        db_session=request.state.db_session,
+        db_session=request.state.db,
     )
     room_list = room_list_service.invoke()
     return room_list
 
 
-@router.get(
-    "/rooms/{room_id}", status_code=status.HTTP_200_OK, response_class=JSONResponse
-)
+@router.get("/{room_id}", status_code=status.HTTP_200_OK, response_class=JSONResponse)
 async def get_room_detail(
     request: Request,
     room_id: int,
     current_user: UserClaims = Depends(get_current_user),
 ) -> RoomDetailResponse:
     room_detail_service = RoomDetailService(
-        room_id=room_id, db_session=request.state.db_session
+        room_id=room_id, db_session=request.state.db
     )
     room_detail = room_detail_service.invoke()
     return room_detail
@@ -76,7 +74,7 @@ def get_room_schedule(
     ),
 ) -> RoomScheduleResponse:
     room_schedule_service = RoomScheduleService(
-        room_id=room_id, date=date, db_session=request.state.db_session
+        room_id=room_id, date=date, db_session=request.state.db
     )
     room_schedule = room_schedule_service.invoke()
     return room_schedule

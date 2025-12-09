@@ -80,4 +80,4 @@ class RoomListService:
     def invoke(self) -> RoomListResponse:
         self.get_filtered_rooms()
         self.get_room_details()
-        return RoomListResponse.model_validate(self.rooms)
+        return RoomListResponse(rooms=self.rooms)

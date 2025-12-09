@@ -14,6 +14,12 @@ from scams_backend.schemas.user.user_claims import UserClaims
 from scams_backend.services.schedule.create_schedule_service import (
     CreateScheduleService,
 )
+from scams_backend.services.schedule.list_all_schedules_service import (
+    ListAllSchedulesService,
+)
+from scams_backend.services.schedule.get_my_schedules_service import (
+    GetMySchedulesService,
+)
 
 router = APIRouter(tags=["Schedules"], prefix="/schedules")
 
@@ -51,8 +57,14 @@ async def get_my_schedules(
     ),
     offset: Optional[int] = Query(0, description="Number of schedules to skip", ge=0),
 ) -> PersonalListSchedulesResponse:
-    # Implementation for fetching user's schedules goes here
-    return PersonalListSchedulesResponse(lecturer_id=current_user.id, schedules=[])
+    get_my_schedules_service = GetMySchedulesService(
+        lecturer_id=current_user.id,
+        limit=limit,
+        offset=offset,
+        db_session=request.state.db,
+    )
+    personal_schedules = get_my_schedules_service.invoke()
+    return personal_schedules
 
 
 @router.get(
@@ -76,4 +88,12 @@ async def get_all_schedules(
         None, description="The building ID to filter schedules"
     ),
 ) -> ListSchedulesResponse:
-    pass
+    list_all_schedules_service = ListAllSchedulesService(
+        date=date,
+        room_id=room_id,
+        lecturer_id=lecturer_id,
+        building_id=building_id,
+        db_session=request.state.db,
+    )
+    schedules = list_all_schedules_service.invoke()
+    return schedules

@@ -7,7 +7,7 @@ from scams_backend.constants.user import UserRole
 class LecturerService:
     def __init__(self, db_session: Session):
         self.db_session: Session = db_session
-        self.lecturers = None
+        self.lecturers = []
 
     def get_lecturers(self):
         self.lecturers = (
@@ -18,6 +18,8 @@ class LecturerService:
 
     def invoke(self):
         self.get_lecturers()
-        return LecturerListResponse.model_validate(
-            [LecturerDetail.model_validate(lecturer) for lecturer in self.lecturers]
+        return LecturerListResponse(
+            lecturers=[
+                LecturerDetail.model_validate(lecturer) for lecturer in self.lecturers
+            ]
         )

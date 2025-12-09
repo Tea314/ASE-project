@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from scams_backend.db.base import Base
+from sqlalchemy import func
 
 
 class Schedule(Base):
@@ -13,7 +14,9 @@ class Schedule(Base):
     start_time = Column(Time, nullable=False)
     lecturer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    created_at = Column(DateTime, nullable=False, server_default="CURRENT_TIMESTAMP")
+    created_at = Column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
 
     room = relationship("Room", back_populates="schedules")
     lecturer = relationship("User", back_populates="schedules")

@@ -37,7 +37,7 @@ docker-compose up -d
 # Using Makefile
 make docker-up
 # Or directly
-docker-compose up -d
+docker-compose -f ./docker/docker-compose.yml up -d
 ```
 
 ### 5. Run database migrations
@@ -65,7 +65,7 @@ poetry run uvicorn src.scams_backend.main:app --reload
 
 ### Common commands
 
-- Stop database: `poetry run make docker-down` or `docker-compose down`
+- Stop database: `make docker-down` or `docker-compose -f ./docker/docker-compose.yml down`
 - Reinstall dependencies: `poetry install`
 - Add a package: `poetry add <package>`
 

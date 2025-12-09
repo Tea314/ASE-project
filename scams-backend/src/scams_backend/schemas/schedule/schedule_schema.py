@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 import datetime
+from typing import Optional
 
 
 class CreateScheduleRequest(BaseModel):
@@ -36,7 +37,7 @@ class ScheduleDetail(BaseModel):
         ..., description="The start time of the scheduled slot"
     )
     purpose: str = Field(..., description="The purpose of the scheduled slot")
-    team_members: str = Field(
+    team_members: Optional[str] = Field(
         ...,
         description="A comma-separated string of team member names involved in the schedule",
     )

@@ -5,6 +5,7 @@ from scams_backend.models.building import Building
 from scams_backend.models.device import Device
 from scams_backend.models.room_device import RoomDevice
 from scams_backend.schemas.room.room_schema import RoomDetailResponse
+from scams_backend.services.room.exception import RoomNotFoundException
 
 
 class RoomDetailService:
@@ -26,20 +27,23 @@ class RoomDetailService:
                 Device.id.label("device_id"),
                 Device.name.label("device_name"),
             )
-            .join(Building, Room.building_id == Building.id)
-            .join(RoomDevice, Room.id == RoomDevice.room_id)
-            .join(Device, RoomDevice.device_id == Device.id)
+            .join(Building, Room.building_id == Building.id, isouter=True)
+            .join(RoomDevice, Room.id == RoomDevice.room_id, isouter=True)
+            .join(Device, RoomDevice.device_id == Device.id, isouter=True)
             .where(Room.id == self.room_id)
         )
         results = self.db_session.execute(stmt).all()
 
         if not results:
-            self.room_detail = None
-            return
+            raise RoomNotFoundException(self.room_id)
 
         room_info = results[0]
 
-        devices = [{"id": row.device_id, "name": row.device_name} for row in results]
+        devices = [
+            {"id": row.device_id, "name": row.device_name}
+            for row in results
+            if row.device_id and row.device_name
+        ]
 
         self.room_detail = {
             "id": room_info.id,
