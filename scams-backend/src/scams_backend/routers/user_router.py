@@ -59,6 +59,13 @@ async def signin(request: Request, signin_request: UserSignInRequest) -> Respons
     return response
 
 
+@router.post("/signout", status_code=status.HTTP_200_OK, response_class=JSONResponse)
+async def signout() -> Response:
+    response: Response = JSONResponse(content={"message": "Successfully signed out"})
+    response.delete_cookie(key="access_token")
+    return response
+
+
 @router.get("/", status_code=status.HTTP_200_OK, response_class=JSONResponse)
 async def get_user_claims(current_user=Depends(get_current_user)) -> UserClaims:
     return current_user
