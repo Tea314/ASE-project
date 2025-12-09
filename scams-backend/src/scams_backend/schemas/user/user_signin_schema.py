@@ -11,4 +11,5 @@ class UserSignInRequest(BaseModel):
 class UserSignInResponse(BaseModel):
     email: EmailStr = Field(..., description="The user's email address")
     role: UserRole = Field(..., description="The role of the user")
+    full_name: str = Field(..., description="The full name of the user")
     model_config = ConfigDict(from_attributes=True)
