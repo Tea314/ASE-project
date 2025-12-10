@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Python 3.8 or newer (recommend [pyenv](https://github.com/pyenv/pyenv) or system Python)
+- Python 3.10 or newer (recommend [pyenv](https://github.com/pyenv/pyenv) or system Python)
 - [Poetry](https://python-poetry.org/) for dependency management
 - Docker (for PostgreSQL database)
 
