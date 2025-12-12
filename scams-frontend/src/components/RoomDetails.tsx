@@ -1,32 +1,122 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { ArrowLeft, MapPin, Users, Star, Calendar as CalendarIcon } from 'lucide-react';
-import type { Room } from '@/types';
+import { ArrowLeft, MapPin, Users, Calendar as CalendarIcon, Loader2, AlertCircle, Clock } from 'lucide-react';
+import type { Room, RoomSchedule } from '@/types';
 import { Calendar } from './ui/calendar';
+import { roomService } from '@/services/roomService';
+import { useAppContext } from '@/contexts/AppContext';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
-interface RoomDetailsProps {
-  room: Room;
-  onBack: () => void;
-  onBook: (roomId: string) => void;
-  onToggleFavorite: (roomId: string) => void;
-}
+export function RoomDetails() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { handleCreateBooking } = useAppContext();
 
-export function RoomDetails({ room, onBack, onBook, onToggleFavorite }: RoomDetailsProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [room, setRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [roomSchedule, setRoomSchedule] = useState<RoomSchedule | null>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
-  // Mock availability data
-  const bookedSlots = ['09:00', '10:00', '14:00', '15:00'];
-  const timeSlots = [];
-  for (let hour = 8; hour <= 18; hour++) {
-    const time = `${hour.toString().padStart(2, '0')}:00`;
-    timeSlots.push(time);
+  // Fetch room details
+  useEffect(() => {
+    const fetchRoomDetails = async () => {
+      if (!id) {
+        setError("Room ID is missing.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const fetchedRoom = await roomService.getRoomById(parseInt(id));
+        setRoom(fetchedRoom);
+      } catch (err) {
+        console.error("Failed to fetch room details:", err);
+        setError("Failed to load room details. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoomDetails();
+  }, [id]);
+
+  // Fetch room schedule for selected date
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!room || !selectedDate) return;
+
+      try {
+        setScheduleLoading(true);
+        setScheduleError(null);
+        const dateString = format(selectedDate, 'yyyy-MM-dd');
+        const schedule = await roomService.getRoomSchedule(room.id, dateString);
+        setRoomSchedule(schedule);
+      } catch (err) {
+        console.error("Failed to fetch room schedule:", err);
+        setScheduleError("Failed to load schedule. Please try again.");
+      } finally {
+        setScheduleLoading(false);
+      }
+    };
+    fetchSchedule();
+  }, [room, selectedDate]);
+
+  const handleBookRoom = () => {
+    if (room) {
+      handleCreateBooking(room.id);
+      // Optionally, navigate to a booking page or open a dialog
+    }
+  };
+
+  const generateTimeSlots = useMemo(() => {
+    const slots = [];
+    for (let hour = 8; hour <= 18; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      if (hour < 18) {
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+      }
+    }
+    return slots;
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="ml-3 text-muted-foreground">Loading room details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] text-red-500">
+        <AlertCircle className="h-10 w-10 mb-3" />
+        <p>{error}</p>
+        <Button onClick={() => navigate(-1)} className="mt-4">Go Back</Button>
+      </div>
+    );
+  }
+
+  if (!room) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] text-muted-foreground">
+        <AlertCircle className="h-10 w-10 mb-3" />
+        <p>Room not found.</p>
+        <Button onClick={() => navigate(-1)} className="mt-4">Go Back</Button>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={onBack} className="gap-2">
+    <div className="space-y-6 p-6">
+      <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back to rooms
       </Button>
@@ -37,7 +127,7 @@ export function RoomDetails({ room, onBack, onBook, onToggleFavorite }: RoomDeta
           <Card className="overflow-hidden">
             <div className="aspect-video relative overflow-hidden bg-muted">
               <img
-                src={room.image}
+                src={roomService.getRoomImage(room)}
                 alt={room.name}
                 className="w-full h-full object-cover"
               />
@@ -48,30 +138,13 @@ export function RoomDetails({ room, onBack, onBook, onToggleFavorite }: RoomDeta
                   <CardTitle>{room.name}</CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-2">
                     <MapPin className="h-3 w-3" />
-                    {room.location}
+                    {roomService.formatRoomLocation(room)}
                   </CardDescription>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onToggleFavorite(room.id)}
-                >
-                  <Star
-                    className={`h-4 w-4 ${
-                      room.isFavorite
-                        ? 'text-yellow-500 fill-yellow-500'
-                        : 'text-muted-foreground'
-                    }`}
-                  />
-                </Button>
+                {/* Removed favorite button as it's not in Room type */}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <h4>Description</h4>
-                <p className="text-muted-foreground mt-1">{room.description}</p>
-              </div>
-
               <div>
                 <h4>Capacity</h4>
                 <div className="flex items-center gap-2 mt-2">
@@ -85,15 +158,15 @@ export function RoomDetails({ room, onBack, onBook, onToggleFavorite }: RoomDeta
               <div>
                 <h4>Equipment & Amenities</h4>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {room.equipment.map((eq) => (
-                    <Badge key={eq} variant="outline">
-                      {eq}
+                  {room.devices.map((device) => (
+                    <Badge key={device.id} variant="outline">
+                      {device.name}
                     </Badge>
                   ))}
                 </div>
               </div>
 
-              <Button onClick={() => onBook(room.id)} className="w-full">
+              <Button onClick={handleBookRoom} className="w-full">
                 Book This Room
               </Button>
             </CardContent>
@@ -116,32 +189,43 @@ export function RoomDetails({ room, onBack, onBook, onToggleFavorite }: RoomDeta
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
                 className="rounded-md border"
-                disabled={(date) => date < new Date()}
+                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
               />
 
               {selectedDate && (
                 <div className="space-y-2">
                   <h4>
-                    Available Slots - {selectedDate.toLocaleDateString()}
+                    Available Slots - {format(selectedDate, 'PPP')}
                   </h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {timeSlots.map((time) => {
-                      const isBooked = bookedSlots.includes(time);
-                      return (
-                        <Button
-                          key={time}
-                          variant={isBooked ? 'outline' : 'secondary'}
-                          size="sm"
-                          disabled={isBooked}
-                          className={isBooked ? 'opacity-50' : ''}
-                        >
-                          {time}
-                        </Button>
-                      );
-                    })}
-                  </div>
+                  {scheduleLoading ? (
+                    <div className="flex justify-center items-center h-24">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  ) : scheduleError ? (
+                    <div className="text-red-500 text-center">
+                      <AlertCircle className="h-5 w-5 inline-block mr-2" />
+                      {scheduleError}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-2">
+                      {generateTimeSlots.map((time) => {
+                        const isBooked = roomSchedule?.scheduled_slots.includes(time);
+                        return (
+                          <Button
+                            key={time}
+                            variant={isBooked ? 'outline' : 'secondary'}
+                            size="sm"
+                            disabled={isBooked}
+                            className={isBooked ? 'opacity-50' : ''}
+                          >
+                            {time}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                     <div className="flex items-center gap-1">
                       <div className="w-3 h-3 bg-secondary rounded" />

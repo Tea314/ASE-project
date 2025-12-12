@@ -4,8 +4,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Building2, Mail, Lock } from 'lucide-react';
+import { Building2, Mail, Lock, Loader2 } from 'lucide-react';
 import { AnimatedButton } from './AnimatedButton';
+import { useAppContext } from '../contexts/AppContext';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => void;
@@ -16,9 +17,11 @@ interface LoginPageProps {
 export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { isLoading } = useAppContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     onLogin(email, password);
   };
 
@@ -110,6 +113,7 @@ export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProp
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       className="pl-10"
+                      disabled={isLoading}
                     />
                   </div>
                 </motion.div>
@@ -132,6 +136,7 @@ export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProp
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       className="pl-10"
+                      disabled={isLoading}
                     />
                   </div>
                 </motion.div>
@@ -142,7 +147,8 @@ export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProp
                     visible: { opacity: 1, y: 0 },
                   }}
                 >
-                  <AnimatedButton type="submit" className="w-full" glow>
+                  <AnimatedButton type="submit" className="w-full" glow disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </AnimatedButton>
                 </motion.div>
@@ -159,6 +165,7 @@ export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProp
                     variant="link"
                     onClick={onForgotPassword}
                     className="text-sm"
+                    disabled={isLoading}
                   >
                     Forgot password?
                   </Button>
@@ -189,6 +196,7 @@ export function LoginPage({ onLogin, onForgotPassword, onSignUp }: LoginPageProp
                       variant="link"
                       onClick={onSignUp}
                       className="p-0 h-auto"
+                      disabled={isLoading}
                     >
                       Sign up
                     </Button>

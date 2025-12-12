@@ -129,6 +129,20 @@ export function validateBookingDate(date: string): {
   return { isValid: true };
 }
 
+/**
+ * Generates an array of hourly time slots for booking forms.
+ * @param startHour The starting hour (e.g., 7 for 7:00 AM).
+ * @param endHour The ending hour (e.g., 21 for 9:00 PM).
+ * @returns An array of time strings in "HH:00" format.
+ */
+export function generateHourlyTimeSlots(startHour = 7, endHour = 21): string[] {
+  const slots: string[] = [];
+  for (let hour = startHour; hour <= endHour; hour++) {
+    slots.push(`${hour.toString().padStart(2, '0')}:00`);
+  }
+  return slots;
+}
+
 export function getAlternativeRooms(
   allRooms: any[],
   conflictedRoomId: string,

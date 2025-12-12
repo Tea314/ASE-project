@@ -39,7 +39,7 @@ export function Overview({
 
   const availableRooms = rooms.slice(0, 4);
   const unreadNotifications = notifications.filter((n) => !n.read).length;
-
+  console.log("Available: ", availableRooms)
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
@@ -281,7 +281,7 @@ export function Overview({
                   >
                     <div className="aspect-video relative overflow-hidden bg-muted">
                       <motion.img
-                        src={room.image}
+                        src={room.image_url}
                         alt={room.name}
                         className="w-full h-full object-cover"
                         whileHover={{ scale: 1.1 }}
@@ -303,7 +303,7 @@ export function Overview({
                       <h4>{room.name}</h4>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        {room.location}
+                        {room.building_name} - Floor {room.floor_number}
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">

@@ -3,12 +3,14 @@ import type { Room, RoomSchedule } from '../types';
 // API base URL - can be configured via environment variable or uses default
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
   ? import.meta.env.VITE_API_BASE_URL
-  : 'http://localhost:8000/api';
+  : 'http://localhost:8000/api/v1';
 
 /**
  * Room Service - API integration for room endpoints
  */
-
+export interface RoomResponse extends Room {
+  rooms: Room[]
+}
 export const roomService = {
   /**
    * Get all rooms
@@ -21,14 +23,20 @@ export const roomService = {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies with the request
       });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch rooms: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data.rooms || [];
+      const data: RoomResponse = await response.json();
+      const rooms: Room[] = data.rooms.map(room => ({
+        ...room,
+        id: String(room.id),
+      }));
+
+      return rooms;
     } catch (error) {
       console.error('Error fetching rooms:', error);
       throw error;
@@ -46,6 +54,7 @@ export const roomService = {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies with the request
       });
 
       if (!response.ok) {
@@ -72,6 +81,7 @@ export const roomService = {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Include cookies with the request
         }
       );
 

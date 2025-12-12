@@ -139,8 +139,8 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
   }, [bookings]);
 
   // Get room by ID helper
-  const getRoomById = (roomId: string): Room | undefined => {
-    return rooms.find(r => r.id.toString() === roomId);
+  const getRoomById = (roomId: number): Room | undefined => {
+    return rooms.find(r => r.id === roomId);
   };
 
   // Filter bookings

@@ -11,8 +11,9 @@ import { Alert, AlertDescription } from './ui/alert';
 import { ArrowLeft, Calendar as CalendarIcon, Clock, Users, CheckCircle, AlertTriangle } from 'lucide-react';
 import type { Room, Booking } from '@/types';
 import { format } from 'date-fns';
-import { generateTimeSlots } from '../data/mockData';
+import { generateHourlyTimeSlots } from '../utils/bookingValidation';
 import { checkBookingConflict, validateBookingTime, validateBookingDate } from '../utils/bookingValidation';
+import { roomService } from '@/services/roomService';
 
 interface CreateBookingProps {
   rooms: Room[];
@@ -41,7 +42,7 @@ export function CreateBooking({ rooms, bookings, onBack, onConfirm, preselectedR
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const timeSlots = generateTimeSlots();
+  const timeSlots = generateHourlyTimeSlots();
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
 
   // Check for conflicts when date/time changes
@@ -171,24 +172,35 @@ export function CreateBooking({ rooms, bookings, onBack, onConfirm, preselectedR
               <CardDescription>Choose the meeting space for your booking</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {rooms.map((room) => (
                   <div
                     key={room.id}
                     onClick={() => setSelectedRoomId(room.id)}
-                    className={`cursor-pointer rounded-lg border-2 p-4 transition-colors ${
+                    className={`group cursor-pointer rounded-lg border-2 p-0 transition-all overflow-hidden ${
                       selectedRoomId === room.id
                         ? 'border-primary bg-accent'
                         : 'border-border hover:border-muted-foreground'
                     }`}
                   >
-                    <h4>{room.name}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{room.location}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="secondary" className="text-xs gap-1">
-                        <Users className="h-3 w-3" />
-                        {room.capacity}
-                      </Badge>
+                    <div className="aspect-video relative overflow-hidden bg-muted">
+                      <img
+                        src={roomService.getRoomImage(room)}
+                        alt={room.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold">{room.name}</h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {room.building_name}, Floor {room.floor_number}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Users className="h-3 w-3" />
+                          {room.capacity}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 ))}

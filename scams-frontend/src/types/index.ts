@@ -12,7 +12,7 @@ export interface Device {
   name: string;
 }
 export interface Room {
-  id: number;
+  id: string;
   name: string;
   image_url: string | null;
   floor_number: number;
@@ -28,7 +28,7 @@ export interface RoomSchedule {
 }
 export interface Booking {
   id: string;
-  roomId: number;
+  roomId: string;
   roomName: string;
   userId: string;
   userName?: string;

@@ -46,7 +46,7 @@ export function UserRoutes() {
       currentView="" // Không cần nữa vì dùng path
       onNavigate={handleNavigate}
       unreadCount={unreadCount}
-      onLogout={handleLogout}
+      onLogout={() => { handleLogout(); navigate(`/login`) }}
     >
       <Routes>
         <Route
@@ -83,20 +83,8 @@ export function UserRoutes() {
           }
         />
         <Route
-          path="/room-details/:roomId"
-          element={
-            selectedRoom ? (
-              <RoomDetails
-                room={selectedRoom}
-                onBack={() => navigate("/browse")}
-                onBook={(roomId) => {
-                  handleCreateBooking(roomId);
-                  navigate("/create-booking");
-                }}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ) : null
-          }
+          path="/room-details/:id"
+          element={<RoomDetails />}
         />
         <Route
           path="/bookings"

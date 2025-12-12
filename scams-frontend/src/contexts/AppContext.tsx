@@ -6,11 +6,10 @@ import {
   mockDepartmentUsage,
   mockMaintenance,
   mockNotifications,
-  mockRooms,
   mockUsers,
   mockUtilization,
 } from "../data/mockData";
-import type { Booking, MaintenanceSchedule, Notification, Room, User } from "../types";
+import type { Booking, MaintenanceSchedule, Notification, Room, User, Device } from "../types";
 import {
   exportBookingsCSV,
   exportDepartmentUsageCSV,
@@ -19,6 +18,9 @@ import {
 } from "../utils/exportUtils";
 import { safeStorage } from "../utils/safeStorage";
 import { useNavigate } from "react-router-dom";
+import { roomService } from "../services/roomService";
+import { authService } from "../services/authService";
+import { scheduleService } from "../services/scheduleService";
 
 type AppContextType = {
   // States
@@ -53,9 +55,10 @@ type AppContextType = {
   isHighPerf: boolean;
   setIsHighPerf: React.Dispatch<React.SetStateAction<boolean>>;
   unreadCount: number;
+  isLoading: boolean;
 
   // Handlers (tất cả handlers từ file gốc)
-  handleLogin: (email: string, password: string) => void;
+  handleLogin: (email: string, password: string) => Promise<void>;
   handleLogout: () => void;
   handleViewRoom: (roomId: string) => void;
   handleToggleFavorite: (roomId: string) => void;
@@ -79,7 +82,7 @@ type AppContextType = {
   handleBackToOverview: () => void;
   handleAddRoom: () => void;
   handleEditRoom: (roomId: string) => void;
-  handleSaveRoom: (roomData: Partial<Room> & { id?: string }) => void;
+  handleSaveRoom: (roomData: Partial<Room> & { id?: number }) => void;
   handleDeleteRoom: (roomId: string) => void;
   handleAddMaintenance: () => void;
   handleSaveMaintenance: (maintenanceData: Partial<MaintenanceSchedule> & { id?: string }) => void;
@@ -95,6 +98,7 @@ type AppContextType = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [isLoading, setIsLoading] = useState(false);
   // Tất cả useState từ file gốc
   const [user, setUser] = useState<User | null>(() => {
     const storedUser = safeStorage.getItem('user');
@@ -111,9 +115,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   // Data state
-  const [rooms, setRooms] = useState<Room[]>(mockRooms);
-  const [bookings, setBookings] =
-    useState<Booking[]>(mockBookings);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<
     Notification[]
   >(mockNotifications);
@@ -168,6 +171,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
     return saved === "true";
   });
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!user) return;
+
+      setIsLoading(true);
+      try {
+        // Fetch rooms and schedules in parallel
+        const [fetchedRooms, fetchedSchedules] = await Promise.all([
+          roomService.getAllRooms(),
+          scheduleService.getMySchedules()
+        ]);
+
+        setRooms(fetchedRooms);
+        setBookings(fetchedSchedules);
+
+      } catch (error) {
+        console.error("Failed to fetch initial data.", error);
+        toast.error("Could not connect to server. Displaying sample data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [user]);
+
+
   // useEffect cho performance toggle (từ file gốc)
   useEffect(() => {
     const handleStorageChange = () => {
@@ -180,28 +211,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Tất cả handlers từ file gốc (copy-paste và adjust để dùng setState)
-  const handleLogin = (email: string, password: string) => {
-    // Mock authentication - determine role based on email
-    const isAdmin = email.toLowerCase().includes("admin");
-    const mockUser: User = {
-      id: isAdmin ? "admin-1" : "user-1",
-      name: isAdmin ? "Admin User" : "John Doe",
-      email: email,
-      department: isAdmin ? "IT" : "Engineering",
-      role: isAdmin ? "admin" : "employee",
-      status: "active",
-    };
-    setUser(mockUser);
-    safeStorage.setItem('user', JSON.stringify(mockUser));
-    toast.success(
-      `Welcome back${isAdmin ? ", Administrator" : ""}!`,
-    );
+  const handleLogin = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const loggedInUser = await authService.login(email, password);
+      setUser(loggedInUser);
+      safeStorage.setItem('user', JSON.stringify(loggedInUser));
+      toast.success(`Welcome back, ${loggedInUser.name}!`);
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      toast.error(error.message || "Login failed. Please check your credentials.");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.logout();
     setUser(null);
-    safeStorage.removeItem('user');
+    setRooms([]); // Clear rooms data on logout
+    setBookings([]); // Clear bookings data on logout
     toast.success("Signed out successfully");
   };
 
@@ -211,19 +241,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleToggleFavorite = (roomId: string) => {
-    setRooms((prev) =>
-      prev.map((room) =>
-        room.id === roomId
-          ? { ...room, isFavorite: !room.isFavorite }
-          : room,
-      ),
-    );
-    const room = rooms.find((r) => r.id === roomId);
-    if (room?.isFavorite) {
-      toast.success("Removed from favorites");
-    } else {
-      toast.success("Added to favorites");
-    }
+    toast.info("Favorite feature is not implemented yet.");
   };
 
   // Booking handlers
@@ -231,7 +249,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPreselectedRoomId(roomId);
   };
 
-  const handleConfirmBooking = (bookingData: {
+  const handleConfirmBooking = async (bookingData: {
     roomId: string;
     date: Date;
     startTime: string;
@@ -239,37 +257,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     purpose: string;
     teamMembers: string[];
   }) => {
-    const room = rooms.find((r) => r.id === bookingData.roomId);
-    if (!room) return;
+    if (!user) {
+      toast.error("You must be logged in to create a booking.");
+      return;
+    }
 
-    const newBooking: Booking = {
-      id: `booking-${Date.now()}`,
-      roomId: bookingData.roomId,
-      roomName: room.name,
-      userId: user?.id || "",
-      date: bookingData.date.toISOString().split("T")[0],
-      startTime: bookingData.startTime,
-      endTime: bookingData.endTime,
+    // 1. Format the payload for the API
+    const apiPayload = {
+      room_id: parseInt(bookingData.roomId, 10),
+      date: format(bookingData.date, 'yyyy-MM-dd'),
+      start_time: bookingData.startTime,
+      end_time: bookingData.endTime,
       purpose: bookingData.purpose,
-      teamMembers: bookingData.teamMembers,
-      status: "upcoming",
-      createdAt: new Date().toISOString(),
+      team_members: bookingData.teamMembers.join(', '), // Convert array to comma-separated string
     };
 
-    setBookings((prev) => [...prev, newBooking]);
+    try {
+      // 2. Call the service
+      const newBooking = await scheduleService.createBooking(apiPayload);
 
-    // Add confirmation notification
-    const newNotification: Notification = {
-      id: `notification-${Date.now()}`,
-      type: "confirmation",
-      title: "Booking Confirmed",
-      message: `Your booking for ${room.name} has been confirmed.`,
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
-    setNotifications((prev) => [newNotification, ...prev]);
+      // 3. Update local state
+      setBookings((prev) => [...prev, newBooking]);
 
-    toast.success("Booking created successfully!");
+      // 4. Add a confirmation notification
+      const newNotification: Notification = {
+        id: `notification-${Date.now()}`,
+        type: "confirmation",
+        title: "Booking Confirmed",
+        message: `Your booking for ${newBooking.roomName} has been confirmed.`,
+        timestamp: new Date().toISOString(),
+        read: false,
+      };
+      setNotifications((prev) => [newNotification, ...prev]);
+
+      toast.success("Booking created successfully!");
+
+    } catch (error: any) {
+      console.error("Failed to create booking:", error);
+      toast.error(`Booking failed: ${error.message}`);
+    }
   };
 
   const handleEditBooking = (bookingId: string) => {
@@ -399,16 +425,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       // Add new room
       const newRoom: Room = {
-        id: `room-${Date.now()}`,
+        id: `${Date.now()}`,
         name: roomData.name!,
-        location: roomData.location!,
-        floor: roomData.floor,
+        image_url: roomData.image_url || null,
+        floor_number: roomData.floor_number!,
+        building_id: roomData.building_id!,
+        building_name: roomData.building_name!,
         capacity: roomData.capacity!,
-        type: roomData.type,
-        description: roomData.description!,
-        equipment: roomData.equipment!,
-        status: roomData.status || "available",
-        image: roomData.image!,
+        devices: roomData.devices || [],
       };
       setRooms((prev) => [...prev, newRoom]);
       toast.success("Room created successfully");
@@ -451,16 +475,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         status: maintenanceData.status || "scheduled",
       };
       setMaintenance((prev) => [...prev, newMaintenance]);
-
-      // Update room status
-      setRooms((prev) =>
-        prev.map((r) =>
-          r.id === maintenanceData.roomId
-            ? { ...r, status: "maintenance" as const }
-            : r,
-        ),
-      );
-
       toast.success("Maintenance scheduled");
     }
   };
@@ -513,10 +527,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const handleDeactivateUser = (userId: string) => {
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId
-          ? { ...u, status: "inactive" as const }
-          : u,
+      prev.map((u).id === userId
+        ? { ...u, status: "inactive" as const }
+        : u,
       ),
     );
     toast.success("User deactivated");
@@ -547,7 +560,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     maintenance, setMaintenance, conflicts, setConflicts, selectedRoomId, setSelectedRoomId,
     preselectedRoomId, setPreselectedRoomId, editBookingDialog, setEditBookingDialog, roomFormDialog, setRoomFormDialog,
     userFormDialog, setUserFormDialog, maintenanceDialog, setMaintenanceDialog, changePasswordDialog, setChangePasswordDialog,
-    isHighPerf, setIsHighPerf, unreadCount,
+    isHighPerf, setIsHighPerf, unreadCount, isLoading,
     handleLogin, handleLogout, handleViewRoom, handleToggleFavorite, handleCreateBooking, handleConfirmBooking,
     handleEditBooking, handleSaveEditBooking, handleCancelBooking, handleMarkAsRead, handleMarkAllAsRead,
     handleUpdateProfile, handleChangePassword, handleSavePassword, handleBackToOverview, handleAddRoom,

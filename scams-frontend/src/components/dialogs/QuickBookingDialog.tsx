@@ -21,6 +21,8 @@ import {
 import type { Room } from '@/types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { generateHourlyTimeSlots } from '@/utils/bookingValidation';
+import { roomService } from '@/services/roomService';
 
 interface QuickBookingDialogProps {
   open: boolean;
@@ -73,25 +75,15 @@ export function QuickBookingDialog({
 
   // Filter rooms
   const filteredRooms = rooms.filter(room => {
+    const location = `${room.building_name}, Floor ${room.floor_number}`;
     const matchesSearch = room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.location.toLowerCase().includes(searchQuery.toLowerCase());
+      location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCapacity = capacityFilter === null || room.capacity >= capacityFilter;
     return matchesSearch && matchesCapacity;
   });
 
   // Time slots
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 8; hour <= 18; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      if (hour < 18) {
-        slots.push(`${hour.toString().padStart(2, '0')}:30`);
-      }
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
+  const timeSlots = generateHourlyTimeSlots();
 
   const handleRoomSelect = (room: Room) => {
     setSelectedRoom(room);
@@ -248,7 +240,7 @@ export function QuickBookingDialog({
                       >
                         <div className="aspect-video relative overflow-hidden bg-muted">
                           <img
-                            src={room.image}
+                            src={roomService.getRoomImage(room)}
                             alt={room.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
@@ -263,17 +255,17 @@ export function QuickBookingDialog({
                           <h4>{room.name}</h4>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
-                            {room.location}
+                            {room.building_name}, Floor {room.floor_number}
                           </div>
                           <div className="flex flex-wrap gap-1">
-                            {room.equipment.slice(0, 3).map((eq) => (
-                              <Badge key={eq} variant="outline" className="text-xs">
-                                {eq}
+                            {room.devices.slice(0, 3).map((device, index) => (
+                              <Badge key={`${room.id}-${device.id}-${index}`} variant="outline" className="text-xs">
+                                {device.name}
                               </Badge>
                             ))}
-                            {room.equipment.length > 3 && (
+                            {room.devices.length > 3 && (
                               <Badge variant="outline" className="text-xs">
-                                +{room.equipment.length - 3}
+                                +{room.devices.length - 3}
                               </Badge>
                             )}
                           </div>
@@ -304,12 +296,12 @@ export function QuickBookingDialog({
                   {/* Selected Room Info */}
                   <div className="p-4 rounded-lg border bg-card">
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-lg overflow-hidden">
-                        <img src={selectedRoom.image} alt={selectedRoom.name} className="w-full h-full object-cover" />
+                      <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                        <img src={roomService.getRoomImage(selectedRoom)} alt={selectedRoom.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1">
                         <h4>{selectedRoom.name}</h4>
-                        <p className="text-sm text-muted-foreground">{selectedRoom.location}</p>
+                        <p className="text-sm text-muted-foreground">{selectedRoom.building_name}, Floor {selectedRoom.floor_number}</p>
                       </div>
                       <Button
                         size="sm"
@@ -321,7 +313,7 @@ export function QuickBookingDialog({
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="flex flex-col md:flex-row gap-6">
                     {/* Calendar */}
                     <div className="space-y-3">
                       <Label>Select Date</Label>
@@ -335,58 +327,62 @@ export function QuickBookingDialog({
                     </div>
 
                     {/* Time Selection */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 flex-1">
                       <div className="space-y-3">
                         <Label>Start Time</Label>
-                        <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-                          {timeSlots.map((time) => (
-                            <Button
-                              key={`start-${time}`}
-                              size="sm"
-                              variant={startTime === time ? 'default' : 'outline'}
-                              onClick={() => setStartTime(time)}
-                              className="w-full"
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
+                        <ScrollArea className="h-48">
+                          <div className="grid grid-cols-3 gap-2 pr-4">
+                            {timeSlots.map((time) => (
+                              <Button
+                                key={`start-${time}`}
+                                size="sm"
+                                variant={startTime === time ? 'default' : 'outline'}
+                                onClick={() => setStartTime(time)}
+                                className="w-full"
+                              >
+                                {time}
+                              </Button>
+                            ))}
+                          </div>
+                        </ScrollArea>
                       </div>
 
                       <div className="space-y-3">
                         <Label>End Time</Label>
-                        <div className="grid grid-cols-4 gap-2 max-h-64 overflow-y-auto">
-                          {timeSlots.map((time) => (
-                            <Button
-                              key={`end-${time}`}
-                              size="sm"
-                              variant={endTime === time ? 'default' : 'outline'}
-                              onClick={() => setEndTime(time)}
-                              className="w-full"
-                            >
-                              {time}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Duration Display */}
-                      {startTime && endTime && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="p-3 rounded-lg bg-primary/10 border border-primary/20"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium">
-                              {format(selectedDate, 'MMM dd, yyyy')} • {startTime} - {endTime}
-                            </span>
+                        <ScrollArea className="h-48">
+                          <div className="grid grid-cols-3 gap-2 pr-4">
+                            {timeSlots.filter(t => t > startTime).map((time) => (
+                              <Button
+                                key={`end-${time}`}
+                                size="sm"
+                                variant={endTime === time ? 'default' : 'outline'}
+                                onClick={() => setEndTime(time)}
+                                className="w-full"
+                              >
+                                {time}
+                              </Button>
+                            ))}
                           </div>
-                        </motion.div>
-                      )}
+                        </ScrollArea>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Duration Display */}
+                  {startTime && endTime && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-3 rounded-lg bg-primary/10 border border-primary/20"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">
+                          {format(selectedDate, 'MMM dd, yyyy')} • {startTime} - {endTime}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )}
 
                   <div className="flex justify-end gap-3 pt-4 border-t">
                     <Button variant="outline" onClick={() => setCurrentStep('room')}>
@@ -416,7 +412,7 @@ export function QuickBookingDialog({
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span className="font-medium">{selectedRoom.name}</span>
-                        <Badge variant="outline">{selectedRoom.location}</Badge>
+                        <Badge variant="outline">{selectedRoom.building_name}, Floor {selectedRoom.floor_number}</Badge>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <CalendarIcon className="h-4 w-4 text-muted-foreground" />

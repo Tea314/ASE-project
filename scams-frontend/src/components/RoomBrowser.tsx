@@ -9,6 +9,7 @@ import type { Room } from '@/types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Label } from './ui/label';
 import { Slider } from './ui/slider';
+import { roomService } from '@/services/roomService';
 
 interface RoomBrowserProps {
   rooms: Room[];
@@ -22,26 +23,30 @@ export function RoomBrowser({ rooms, onViewRoom, onToggleFavorite }: RoomBrowser
   const [capacityFilter, setCapacityFilter] = useState<number[]>([0]);
   const [equipmentFilter, setEquipmentFilter] = useState<string[]>([]);
 
-  const allEquipment = Array.from(new Set(rooms.flatMap((r) => r.equipment)));
+  const allEquipment = Array.from(new Set(rooms.flatMap((r) => (r.devices || []).map(d => d.name))));
 
   const filteredRooms = rooms
     .filter((room) => {
+      const location = `${room.building_name}, Floor ${room.floor_number}`;
       const matchesSearch =
         room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.location.toLowerCase().includes(searchQuery.toLowerCase());
+        location.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCapacity = capacityFilter[0] === 0 || room.capacity >= capacityFilter[0];
       
       const matchesEquipment =
         equipmentFilter.length === 0 ||
-        equipmentFilter.every((eq) => room.equipment.includes(eq));
+        equipmentFilter.every((eq) => (room.devices || []).some(d => d.name === eq));
 
       return matchesSearch && matchesCapacity && matchesEquipment;
     })
     .sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'capacity') return b.capacity - a.capacity;
-      if (sortBy === 'location') return a.location.localeCompare(b.location);
+      const locationA = `${a.building_name}, Floor ${a.floor_number}`;
+      const locationB = `${b.building_name}, Floor ${b.floor_number}`;
+      if (sortBy === 'location') return locationA.localeCompare(locationB);
+      // @ts-ignore
       if (sortBy === 'favorites') return (b.isFavorite ? 1 : 0) - (a.isFavorite ? 1 : 0);
       return 0;
     });
@@ -164,7 +169,7 @@ export function RoomBrowser({ rooms, onViewRoom, onToggleFavorite }: RoomBrowser
               >
                 <div className="aspect-video relative overflow-hidden bg-muted">
                   <img
-                    src={room.image}
+                    src={roomService.getRoomImage(room)}
                     alt={room.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                   />
@@ -177,6 +182,7 @@ export function RoomBrowser({ rooms, onViewRoom, onToggleFavorite }: RoomBrowser
                   >
                     <Star
                       className={`h-4 w-4 ${
+                        // @ts-ignore
                         room.isFavorite
                           ? 'text-yellow-500 fill-yellow-500'
                           : 'text-muted-foreground'
@@ -189,7 +195,7 @@ export function RoomBrowser({ rooms, onViewRoom, onToggleFavorite }: RoomBrowser
                     <h3>{room.name}</h3>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                       <MapPin className="h-3 w-3" />
-                      {room.location}
+                      {room.building_name}, Floor {room.floor_number}
                     </div>
                   </div>
 
@@ -201,14 +207,14 @@ export function RoomBrowser({ rooms, onViewRoom, onToggleFavorite }: RoomBrowser
                   </div>
 
                   <div className="flex flex-wrap gap-1">
-                    {room.equipment.slice(0, 3).map((eq) => (
-                      <Badge key={eq} variant="outline" className="text-xs">
-                        {eq}
+                    {(room.devices || []).slice(0, 3).map((device) => (
+                      <Badge key={device.id} variant="outline" className="text-xs">
+                        {device.name}
                       </Badge>
                     ))}
-                    {room.equipment.length > 3 && (
+                    {(room.devices || []).length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{room.equipment.length - 3}
+                        +{(room.devices || []).length - 3}
                       </Badge>
                     )}
                   </div>

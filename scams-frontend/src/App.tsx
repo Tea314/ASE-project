@@ -22,10 +22,11 @@ import { AppProvider, useAppContext } from "./contexts/AppContext";
 import { AuthRoutes } from "./routes/AuthRoutes";
 import { UserRoutes } from "./routes/UserRoutes";
 import { AdminRoutes } from "./routes/AdminRoutes";
+import { LoadingScreen } from "./components/LoadingStates";
 import { Bell, Calendar, Home, LogOut, Plus, Search, User as UserIcon } from "lucide-react";
 
 function AppContent() {
-  const { user, isHighPerf, unreadCount, handleCreateBooking, handleLogout, editBookingDialog, setEditBookingDialog, rooms, handleSaveEditBooking, roomFormDialog, setRoomFormDialog, handleSaveRoom, userFormDialog, setUserFormDialog, handleSaveUser, maintenanceDialog, setMaintenanceDialog, handleSaveMaintenance, changePasswordDialog, setChangePasswordDialog, handleSavePassword } = useAppContext();
+  const { user, isLoading, isHighPerf, unreadCount, handleCreateBooking, handleLogout, editBookingDialog, setEditBookingDialog, rooms, handleSaveEditBooking, roomFormDialog, setRoomFormDialog, handleSaveRoom, userFormDialog, setUserFormDialog, handleSaveUser, maintenanceDialog, setMaintenanceDialog, handleSaveMaintenance, changePasswordDialog, setChangePasswordDialog, handleSavePassword } = useAppContext();
   const { open: commandPaletteOpen, setOpen: setCommandPaletteOpen } = useCommandPalette();
   const navigate = useNavigate(); // Để dùng trong commands nếu cần
 
@@ -50,6 +51,10 @@ function AppContent() {
       { id: "action-logout", label: "Sign Out", description: "Log out of your account", icon: LogOut, action: handleLogout, category: "actions" as const },
     ]
     : [];
+
+  if (isLoading && user) {
+    return <LoadingScreen />;
+  }
 
   return (
     <ErrorBoundary>
