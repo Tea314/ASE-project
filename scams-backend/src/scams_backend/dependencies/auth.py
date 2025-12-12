@@ -1,6 +1,7 @@
 from fastapi import Cookie, Depends, HTTPException, status, Request
 from scams_backend.utils.jwt import decode_jwt
 from scams_backend.schemas.user.user_claims import UserClaims
+from scams_backend.utils.encrypt import decrypt_data
 
 
 def get_current_user(
@@ -13,6 +14,8 @@ def get_current_user(
 
     try:
         payload = decode_jwt(access_token)
+        payload["email"] = payload["email"]
+        payload["full_name"] = payload["full_name"]
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 

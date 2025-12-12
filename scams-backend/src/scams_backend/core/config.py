@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "your_secret_key"
     JWT_ALGORITHM: str = "HS256"
+    AES_KEY: str = "your_aes_key"
 
     class Config:
         env_file = ".env"

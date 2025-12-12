@@ -7,6 +7,7 @@ from scams_backend.schemas.schedule.schedule_schema import (
 from scams_backend.constants.user import UserRole
 from scams_backend.services.user.exception import PermissionException
 from scams_backend.models.user import User
+from scams_backend.utils.encrypt import decrypt_data
 
 
 class GetMySchedulesService:
@@ -49,13 +50,17 @@ class GetMySchedulesService:
                     room_id=schedule.room_id,
                     room_name=room.name if room else "",
                     lecturer_id=schedule.lecturer_id,
-                    lecturer_name=lecturer.full_name if lecturer else "",
+                    lecturer_name=decrypt_data(lecturer.full_name) if lecturer else "",
                     building_id=building.id if building else None,
                     building_name=building.name if building else "",
                     date=schedule.date,
                     start_time=schedule.start_time,
-                    purpose=schedule.purpose,
-                    team_members=schedule.team_members,
+                    purpose=decrypt_data(schedule.purpose),
+                    team_members=(
+                        decrypt_data(schedule.team_members)
+                        if schedule.team_members
+                        else ""
+                    ),
                     created_at=schedule.created_at,
                 )
             )

@@ -47,10 +47,10 @@ docker-compose -f ./docker/docker-compose.yml up -d
 # Using Makefile
 make setup
 # Or directly
-poetry run alembic upgrade head
 docker exec -i postgres-db psql -U your_user -d template1 -c "DROP DATABASE IF EXISTS postgres;"
 docker exec -i postgres-db psql -U your_user -d template1 -c "CREATE DATABASE postgres;"
-docker exec -i postgres-db psql -U your_user -d postgres < ./docker/init.sql
+poetry run alembic upgrade head
+poetry run python scripts/seed.py
 ```
 
 ### 6. Start the backend server

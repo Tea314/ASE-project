@@ -13,9 +13,9 @@ from scams_backend.services.schedule.exception import (
     ScheduleTimeConflictException,
     ScheduleCreationException,
 )
-from scams_backend.models.building import Building
 
 from datetime import datetime
+from scams_backend.utils.encrypt import encrypt_data, decrypt_data
 
 
 class CreateScheduleService:
@@ -76,8 +76,12 @@ class CreateScheduleService:
                     lecturer_id=self.user_id,
                     date=self.create_schedule_request.date,
                     start_time=datetime.strptime(f"{hour:02d}:00", "%H:%M").time(),
-                    purpose=self.create_schedule_request.purpose,
-                    team_members=self.create_schedule_request.team_members,
+                    purpose=encrypt_data(self.create_schedule_request.purpose),
+                    team_members=(
+                        encrypt_data(self.create_schedule_request.team_members)
+                        if self.create_schedule_request.team_members
+                        else encrypt_data("")
+                    ),
                 )
                 self.db_session.add(schedule)
                 self.schedules.append(schedule)
@@ -108,13 +112,17 @@ class CreateScheduleService:
                     room_id=schedule.room_id,
                     room_name=room.name if room else "",
                     lecturer_id=schedule.lecturer_id,
-                    lecturer_name=lecturer.full_name if lecturer else "",
+                    lecturer_name=decrypt_data(lecturer.full_name) if lecturer else "",
                     building_id=building.id if building else None,
                     building_name=building.name if building else "",
                     date=schedule.date,
                     start_time=schedule.start_time,
-                    purpose=schedule.purpose,
-                    team_members=schedule.team_members,
+                    purpose=decrypt_data(schedule.purpose),
+                    team_members=(
+                        decrypt_data(schedule.team_members)
+                        if schedule.team_members
+                        else ""
+                    ),
                     created_at=schedule.created_at,
                 )
             )

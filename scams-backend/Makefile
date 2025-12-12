@@ -10,6 +10,5 @@ reset-db:
 	docker exec -i postgres-db psql -U your_user -d template1 -c "DROP DATABASE IF EXISTS postgres;"
 	docker exec -i postgres-db psql -U your_user -d template1 -c "CREATE DATABASE postgres;"
 seed:
-	docker exec -i postgres-db psql -U your_user -d postgres < ./docker/init.sql
-
+	poetry run python scripts/seed.py
 setup: reset-db migrate seed
