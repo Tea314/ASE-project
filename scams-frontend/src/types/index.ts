@@ -1,9 +1,9 @@
 export interface User {
   id: string;
-  name: string;
+  full_name: string;
   email: string;
-  department: string;
-  role: 'employee' | 'admin';
+  department?: string;
+  role: 'lecturer' | 'student';
   status?: 'active' | 'inactive';
   createdAt?: string;
 }

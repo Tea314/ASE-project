@@ -39,14 +39,15 @@ interface DashboardProps {
 }
 
 export function Dashboard({ user, children, currentView, onNavigate, unreadCount, onLogout }: DashboardProps) {
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = user.full_name
+  const role = user.role
+  // .split(' ')
+  // .map((n) => n[0])
+  // .join('')
+  // .toUpperCase()
+  // .slice(0, 2);
 
-  const menuItems = [
+  const allMenuItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'browse', label: 'Browse Rooms', icon: Search },
     { id: 'bookings', label: 'My Bookings', icon: Calendar },
@@ -54,6 +55,10 @@ export function Dashboard({ user, children, currentView, onNavigate, unreadCount
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
     { id: 'profile', label: 'Profile & Settings', icon: UserIcon },
   ];
+
+  const menuItems = role === 'lecturer'
+    ? allMenuItems
+    : allMenuItems.filter(item => item.id !== 'browse' && item.id !== 'bookings');
 
   return (
     <SidebarProvider>
@@ -115,7 +120,7 @@ export function Dashboard({ user, children, currentView, onNavigate, unreadCount
                 </Avatar>
               </motion.div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-sm font-medium truncate">{user.full_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
             </motion.div>

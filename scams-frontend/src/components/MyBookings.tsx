@@ -54,7 +54,7 @@ export function MyBookings({ bookings, onCreateBooking, onEditBooking, onCancelB
                 <h3>{booking.roomName}</h3>
                 <p className="text-muted-foreground mt-1">{booking.purpose}</p>
               </div>
-              <Badge variant={booking.status === 'upcoming' ? 'default' : 'secondary'}>
+              <Badge className='py-1 px-3' variant={booking.status === 'upcoming' ? 'default' : 'secondary'}>
                 {booking.status}
               </Badge>
             </div>
@@ -142,7 +142,7 @@ export function MyBookings({ bookings, onCreateBooking, onEditBooking, onCancelB
           ) : (
             <div className="space-y-3">
               {upcomingBookings.map((booking) => (
-                <BookingCard key={booking.id} booking={booking} showActions />
+                <BookingCard key={booking.id} booking={booking} showActions={false} />
               ))}
             </div>
           )}

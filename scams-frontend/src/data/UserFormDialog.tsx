@@ -24,7 +24,7 @@ export function UserFormDialog({ user, open, onClose, onSave }: UserFormDialogPr
 
   useEffect(() => {
     if (user) {
-      setName(user.name);
+      setName(user.full_name);
       setEmail(user.email);
       setDepartment(user.department);
       setRole(user.role);
@@ -40,7 +40,7 @@ export function UserFormDialog({ user, open, onClose, onSave }: UserFormDialogPr
 
   const handleSave = () => {
     const userData: Partial<User> & { id?: string } = {
-      name,
+      full_name: name,
       email,
       department,
       role,

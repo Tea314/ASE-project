@@ -1,14 +1,14 @@
+import { BookedRoomsViewAPI } from "@/components/BookedRoomsViewAPI";
 import { Route, Routes, useNavigate } from "react-router-dom";
+import { CreateBooking } from "../components/CreateBooking";
 import { Dashboard } from "../components/Dashboard";
+import { MyBookings } from "../components/MyBookings";
+import { NotificationsComponent } from "../components/Notifications";
 import { Overview } from "../components/Overview";
+import { Profile } from "../components/Profile";
 import { RoomBrowser } from "../components/RoomBrowser";
 import { RoomDetails } from "../components/RoomDetails";
-import { MyBookings } from "../components/MyBookings";
-import { CreateBooking } from "../components/CreateBooking";
-import { NotificationsComponent } from "../components/Notifications";
-import { Profile } from "../components/Profile";
 import { useAppContext } from "../contexts/AppContext";
-import { BookedRoomsView } from "@/components/BookedRoomsView";
 
 export function UserRoutes() {
   const {
@@ -139,8 +139,7 @@ export function UserRoutes() {
         <Route
           path="/booked-rooms-view"
           element={
-            <BookedRoomsView
-            />
+            <BookedRoomsViewAPI />
           }
         />
       </Routes>

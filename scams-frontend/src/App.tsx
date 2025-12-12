@@ -42,10 +42,10 @@ function AppContent() {
   // Commands for CommandPalette (từ file gốc, adjust path)
   const commands = user
     ? [
-      { id: "nav-overview", label: "Go to Overview", description: "View your dashboard", icon: Home, action: () => navigate(user.role === "admin" ? "/admin/overview" : "/overview"), category: "navigation" as const },
+      { id: "nav-overview", label: "Go to Overview", description: "View your dashboard", icon: Home, action: () => navigate("/overview"), category: "navigation" as const },
       { id: "nav-browse", label: "Browse Rooms", description: "Find available meeting rooms", icon: Search, action: () => navigate("/browse"), category: "navigation" as const },
       { id: "nav-bookings", label: "My Bookings", description: "View your reservations", icon: Calendar, action: () => navigate("/bookings"), category: "navigation" as const },
-      { id: "nav-notifications", label: "Notifications", description: `${unreadCount} unread`, icon: Bell, action: () => navigate(user.role === "admin" ? "/admin/notifications" : "/notifications"), category: "navigation" as const },
+      { id: "nav-notifications", label: "Notifications", description: `${unreadCount} unread`, icon: Bell, action: () => navigate("/notifications"), category: "navigation" as const },
       { id: "nav-profile", label: "Profile Settings", description: "Manage your account", icon: UserIcon, action: () => navigate("/profile"), category: "navigation" as const },
       { id: "action-book", label: "Book a Room", description: "Create new booking", icon: Plus, action: handleCreateBooking, shortcut: "⌘B", category: "actions" as const },
       { id: "action-logout", label: "Sign Out", description: "Log out of your account", icon: LogOut, action: handleLogout, category: "actions" as const },
@@ -61,10 +61,10 @@ function AppContent() {
       <NetworkStatus />
       {isHighPerf && <ParticleNetwork />}
       <SmartTheme />
-      <PerformanceToggle />
+      {/* <PerformanceToggle /> */}
       {user && <FloatingActionButton actions={quickActions} />}
-      {user && <AIAssistant onBookRoom={handleCreateBooking} />}
-      <RealtimeActivity />
+      {/* {user && <AIAssistant onBookRoom={handleCreateBooking} />} */}
+      {/* <RealtimeActivity /> */}
       <CommandPalette
         commands={commands}
         open={commandPaletteOpen}
@@ -73,13 +73,15 @@ function AppContent() {
       <Routes>
         {!user ? (
           <Route path="/*" element={<AuthRoutes />} />
-        ) : user.role === "admin" ? (
-          <Route path="/*" element={<AdminRoutes />} />
-        ) : (
-          <Route path="/*" element={<UserRoutes />} />
-        )}
+        )
+          //   : user.role === "admin" ? (
+          //  <Route path="/*" element={<AdminRoutes />} />
+          //) 
+          : (
+            <Route path="/*" element={<UserRoutes />} />
+          )}
         {/* Redirect nếu sai path */}
-        <Route path="*" element={<Navigate to={user ? (user.role === "admin" ? "/admin/overview" : "/overview") : "/"} />} />
+        <Route path="*" element={<Navigate to={user ? ("/overview") : ("/")} />} />
       </Routes>
       <Toaster />
 
