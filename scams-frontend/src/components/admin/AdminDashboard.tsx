@@ -39,12 +39,12 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ user, children, currentView, onNavigate, unreadCount, onLogout }: AdminDashboardProps) {
-  const initials = user.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = user.full_name
+  // .split(' ')
+  // .map((n) => n[0])
+  // .join('')
+  // .toUpperCase()
+  // .slice(0, 2);
 
   const menuItems = [
     { id: 'admin-overview', label: 'Overview', icon: LayoutDashboard },
@@ -105,7 +105,7 @@ export function AdminDashboard({ user, children, currentView, onNavigate, unread
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
+                <p className="text-sm font-medium truncate">{user.full_name}</p>
                 <p className="text-xs text-muted-foreground truncate">Administrator</p>
               </div>
             </div>

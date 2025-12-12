@@ -183,7 +183,7 @@ export const mockNotifications: Notification[] = [
 export const mockUsers: User[] = [
   {
     id: 'user-1',
-    name: 'John Doe',
+    full_name: 'John Doe',
     email: 'john.doe@company.com',
     department: 'Engineering',
     role: 'employee',
@@ -192,7 +192,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'user-2',
-    name: 'Sarah Williams',
+    full_name: 'Sarah Williams',
     email: 'sarah.williams@company.com',
     department: 'Marketing',
     role: 'employee',
@@ -201,7 +201,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'user-3',
-    name: 'Michael Chen',
+    full_name: 'Michael Chen',
     email: 'michael.chen@company.com',
     department: 'HR',
     role: 'employee',
@@ -210,7 +210,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'admin-1',
-    name: 'Admin User',
+    full_name: 'Admin User',
     email: 'admin@company.com',
     department: 'IT',
     role: 'admin',
@@ -219,7 +219,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'user-4',
-    name: 'Emily Rodriguez',
+    full_name: 'Emily Rodriguez',
     email: 'emily.rodriguez@company.com',
     department: 'Sales',
     role: 'employee',
@@ -228,7 +228,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 'user-5',
-    name: 'David Kim',
+    full_name: 'David Kim',
     email: 'david.kim@company.com',
     department: 'Finance',
     role: 'employee',

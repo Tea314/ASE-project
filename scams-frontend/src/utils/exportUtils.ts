@@ -78,7 +78,7 @@ export function exportRoomsCSV(rooms: Room[]) {
 export function exportUsersCSV(users: User[]) {
   const data = users.map(user => ({
     'User ID': user.id,
-    'Name': user.name,
+    'Name': user.full_name,
     'Email': user.email,
     'Department': user.department,
     'Role': user.role,

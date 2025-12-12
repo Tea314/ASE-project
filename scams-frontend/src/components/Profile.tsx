@@ -18,7 +18,7 @@ interface ProfileProps {
 
 export function Profile({ user, onUpdateProfile, onChangePassword, onLogout }: ProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user.name);
+  const [name, setName] = useState(user.full_name);
   const [email, setEmail] = useState(user.email);
   const [department, setDepartment] = useState(user.department);
   const [darkMode, setDarkMode] = useState(false);
@@ -26,18 +26,18 @@ export function Profile({ user, onUpdateProfile, onChangePassword, onLogout }: P
   const [reminderNotifications, setReminderNotifications] = useState(true);
 
   const handleSave = () => {
-    onUpdateProfile({ name, email, department });
+    onUpdateProfile({ full_name: name, email, department });
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setName(user.name);
+    setName(user.full_name);
     setEmail(user.email);
     setDepartment(user.department);
     setIsEditing(false);
   };
 
-  const initials = user.name
+  const initials = user.full_name
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -74,7 +74,7 @@ export function Profile({ user, onUpdateProfile, onChangePassword, onLogout }: P
                   <AvatarFallback className="text-xl">{initials}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3>{user.name}</h3>
+                  <h3>{user.full_name}</h3>
                   <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>
