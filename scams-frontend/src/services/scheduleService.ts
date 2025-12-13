@@ -8,7 +8,9 @@ interface ScheduleApiResponse {
   lecturer_id: number;
   schedules: ApiSchedule[];
 }
-
+interface CreateBookingResponse {
+  schedule: ApiSchedule[];
+}
 interface ApiSchedule {
   id: number;
   room_id: number;
@@ -148,7 +150,7 @@ export const scheduleService = {
     end_time: string;
     purpose: string;
     team_members: string;
-  }): Promise<Booking> {
+  }): Promise<Booking[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/schedules/`, {
         method: 'POST',
@@ -160,14 +162,18 @@ export const scheduleService = {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({})); // Catch if response is not JSON
+        const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.detail || `Failed to create booking: ${response.statusText}`;
         throw new Error(errorMessage);
       }
 
-      const newApiSchedule: ApiSchedule = await response.json();
-      // Map the API response back to the app's Booking type
-      return mapApiScheduleToBooking(newApiSchedule);
+      const data: CreateBookingResponse = await response.json();
+
+      if (!data.schedule || !Array.isArray(data.schedule)) {
+        throw new Error("Invalid response format from server");
+      }
+
+      return data.schedule.map(mapApiScheduleToBooking);
 
     } catch (error) {
       console.error('Error creating booking:', error);

@@ -71,7 +71,7 @@ type AppContextType = {
     endTime: string;
     purpose: string;
     teamMembers: string[];
-  }) => void;
+  }) => Promise<void>;
   handleEditBooking: (bookingId: string) => void;
   handleSaveEditBooking: (bookingId: string, updates: Partial<Booking>) => void;
   handleCancelBooking: (bookingId: string) => void;
@@ -275,17 +275,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // 2. Call the service
-      const newBooking = await scheduleService.createBooking(apiPayload);
+      // Cập nhật: Hàm này giờ trả về một MẢNG (Booking[])
+      const newBookings = await scheduleService.createBooking(apiPayload);
+
+      // Kiểm tra an toàn: Đảm bảo server có trả về dữ liệu
+      if (!newBookings || newBookings.length === 0) {
+        throw new Error("No booking data returned from server.");
+      }
 
       // 3. Update local state
-      setBookings((prev) => [...prev, newBooking]);
+      // Cập nhật: Dùng spread operator (...) để thêm toàn bộ mảng booking mới vào state
+      setBookings((prev) => [...prev, ...newBookings]);
 
       // 4. Add a confirmation notification
+      // Lấy thông tin từ slot đầu tiên để hiển thị (vì tất cả đều cùng 1 phòng)
+      const firstBooking = newBookings[0];
+
       const newNotification: Notification = {
         id: `notification-${Date.now()}`,
         type: "confirmation",
         title: "Booking Confirmed",
-        message: `Your booking for ${newBooking.roomName} has been confirmed.`,
+        message: `Your booking for ${firstBooking.roomName} has been confirmed.`,
         timestamp: new Date().toISOString(),
         read: false,
       };
@@ -298,7 +308,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toast.error(`Booking failed: ${error.message}`);
     }
   };
-
   const handleEditBooking = (bookingId: string) => {
     const booking = bookings.find((b) => b.id === bookingId);
     if (booking) {
