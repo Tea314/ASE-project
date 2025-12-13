@@ -60,6 +60,33 @@ export const authService = {
     }
   },
 
+  async signup(
+    email: string,
+    password: string,
+    fullName: string,
+    role: 'student' | 'lecturer'
+  ): Promise<{ email: string; role: string; full_name: string }> {
+    const response = await fetch(`${API_BASE_URL}/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        full_name: fullName,
+        role,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Signup failed' }));
+      throw new Error(errorData.detail || 'An unknown error occurred');
+    }
+
+    return response.json();
+  },
+
   // async getUserClaims(): Promise<User> {
   //   try {
   //     await fetch(`${API_BASE_URL}/`, { // Assuming a logout endpoint

@@ -49,20 +49,6 @@ export function AuthRoutes() {
         path="/signup"
         element={
           <SignUpPage
-            onSignUp={(data) => {
-              // Logic sign up từ file gốc
-              const newUser = {
-                id: `user-${Date.now()}`,
-                name: data.fullName,
-                email: data.email,
-                department: data.department,
-                role: "employee",
-                status: "active",
-                createdAt: new Date().toISOString(),
-              };
-              // setUsers và setUser ở đây nếu cần, nhưng vì mock, assume backend handle
-              navigate("/overview");
-            }}
             onBackToLogin={() => navigate("/login")}
           />
         }

@@ -5,30 +5,22 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Building2, Mail, Lock, User, Briefcase, ArrowLeft } from 'lucide-react';
+import { authService } from '../services/authService';
 import { AnimatedButton } from './AnimatedButton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 
 interface SignUpPageProps {
-  onSignUp: (userData: SignUpData) => void;
   onBackToLogin: () => void;
 }
 
-export interface SignUpData {
-  fullName: string;
-  email: string;
-  password: string;
-  department: string;
-  role?: 'employee' | 'admin';
-}
-
-export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
+export function SignUpPage({ onBackToLogin }: SignUpPageProps) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    department: '',
+    role: '' as 'student' | 'lecturer' | '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -60,8 +52,8 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (!formData.department) {
-      newErrors.department = 'Department is required';
+    if (!formData.role) {
+      newErrors.role = 'Role is required';
     }
 
     setErrors(newErrors);
@@ -79,24 +71,21 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await authService.signup(
+        formData.email,
+        formData.password,
+        formData.fullName,
+        formData.role as 'student' | 'lecturer'
+      );
 
-      const userData: SignUpData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        department: formData.department,
-        role: 'employee', // Default role
-      };
-
-      // This is where the backend integration would happen
-      // For now, we'll call the onSignUp callback
-      onSignUp(userData);
-
-      toast.success('Account created successfully!');
+      toast.success('Account created successfully! You can now log in.');
+      onBackToLogin();
     } catch (error) {
-      toast.error('Failed to create account. Please try again.');
+      if (error instanceof Error) {
+        toast.error(`Sign up failed: ${error.message}`);
+      } else {
+        toast.error('An unknown error occurred during sign up.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -253,32 +242,25 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
                     visible: { opacity: 1, x: 0 },
                   }}
                 >
-                  <Label htmlFor="department">Department</Label>
+                  <Label htmlFor="department">Role</Label>
                   <div className="relative">
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                     <Select
-                      value={formData.department}
-                      onValueChange={(value) => handleChange('department', value)}
+                      value={formData.role}
+                      onValueChange={(value) => handleChange('role', value)}
                       disabled={isLoading}
                     >
                       <SelectTrigger className={`pl-10 ${errors.department ? 'border-red-500' : ''}`}>
-                        <SelectValue placeholder="Select department" />
+                        <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="engineering">Engineering</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
-                        <SelectItem value="hr">Human Resources</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="product">Product</SelectItem>
-                        <SelectItem value="customer-success">Customer Success</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="lecturer">Lecturer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   {errors.department && (
-                    <p className="text-xs text-red-500">{errors.department}</p>
+                    <p className="text-xs text-red-500">{errors.role}</p>
                   )}
                 </motion.div>
 

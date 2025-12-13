@@ -1,3 +1,5 @@
+import { useAppContext } from '@/contexts/AppContext';
+import { StudentOverview } from './StudentOverview';
 import { motion } from 'motion/react';
 import { CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -32,6 +34,12 @@ export function Overview({
   onBrowseRooms,
   onViewBookings
 }: OverviewProps) {
+  const { user } = useAppContext();
+
+  if (user?.role === 'student') {
+    return <StudentOverview />;
+  }
+
   const upcomingBookings = bookings
     .filter((b) => b.status === 'upcoming')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -39,7 +47,7 @@ export function Overview({
 
   const availableRooms = rooms.slice(0, 4);
   const unreadNotifications = notifications.filter((n) => !n.read).length;
-  console.log("Available: ", availableRooms)
+
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
