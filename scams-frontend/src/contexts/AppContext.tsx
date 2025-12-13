@@ -9,7 +9,7 @@ import {
   mockUsers,
   mockUtilization,
 } from "../data/mockData";
-import type { Booking, MaintenanceSchedule, Notification, Room, User, Device } from "../types";
+import type { Booking, MaintenanceSchedule, Notification, Room, User, Device, BookingConflict } from "../types";
 import {
   exportBookingsCSV,
   exportDepartmentUsageCSV,
@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { roomService } from "../services/roomService";
 import { authService } from "../services/authService";
 import { scheduleService } from "../services/scheduleService";
+import { format } from "date-fns";
 
 type AppContextType = {
   // States
@@ -36,8 +37,8 @@ type AppContextType = {
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   maintenance: MaintenanceSchedule[];
   setMaintenance: React.Dispatch<React.SetStateAction<MaintenanceSchedule[]>>;
-  conflicts: any[]; // Giả sử type từ mockConflicts
-  setConflicts: React.Dispatch<React.SetStateAction<any[]>>;
+  conflicts: BookingConflict[]; // Giả sử type từ mockConflicts
+  setConflicts: React.Dispatch<React.SetStateAction<BookingConflict[]>>;
   selectedRoomId: string | null;
   setSelectedRoomId: React.Dispatch<React.SetStateAction<string | null>>;
   preselectedRoomId: string | undefined;
@@ -82,7 +83,7 @@ type AppContextType = {
   handleBackToOverview: () => void;
   handleAddRoom: () => void;
   handleEditRoom: (roomId: string) => void;
-  handleSaveRoom: (roomData: Partial<Room> & { id?: number }) => void;
+  handleSaveRoom: (roomData: Partial<Room> & { id?: string }) => void;
   handleDeleteRoom: (roomId: string) => void;
   handleAddMaintenance: () => void;
   handleSaveMaintenance: (maintenanceData: Partial<MaintenanceSchedule> & { id?: string }) => void;
@@ -174,7 +175,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fetchInitialData = async () => {
-      if (!user) return;
+      if (!user || user.role == 'student') return;
 
       setIsLoading(true);
       try {
@@ -217,7 +218,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
       safeStorage.setItem('user', JSON.stringify(loggedInUser));
-      toast.success(`Welcome back, ${loggedInUser.name}!`);
+      toast.success(`Welcome back, ${loggedInUser.full_name}!`);
     } catch (error: any) {
       console.error("Login failed:", error);
       toast.error(error.message || "Login failed. Please check your credentials.");
@@ -393,8 +394,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Navigation handler
 
   const handleBackToOverview = () => {
-    const defaultView =
-      user?.role === "admin" ? "admin-overview" : "overview";
+    const defaultView = "overview";
+    // user?.role === "admin" ? "admin-overview" : "overview";
     setSelectedRoomId(null);
     setPreselectedRoomId(undefined);
   };
@@ -512,10 +513,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Add new user
       const newUser: User = {
         id: `user-${Date.now()}`,
-        name: userData.name!,
+        full_name: userData.full_name!,
         email: userData.email!,
         department: userData.department!,
-        role: userData.role || "employee",
+        role: userData.role || "student",
         status: userData.status || "active",
         createdAt:
           userData.createdAt || new Date().toISOString(),
@@ -526,13 +527,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleDeactivateUser = (userId: string) => {
-    setUsers((prev) =>
-      prev.map((u).id === userId
-        ? { ...u, status: "inactive" as const }
-        : u,
-      ),
-    );
-    toast.success("User deactivated");
+    // setUsers((prev) =>
+    //   prev.map((u).id === userId
+    //     ? { ...u, status: "inactive" as const }
+    //     : u,
+    //   ),
+    // );
+    // toast.success("User deactivated");
   };
 
   const handleBulkUpload = () => {

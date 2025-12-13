@@ -33,10 +33,10 @@ export const authService = {
     // Adapt the API response to the User type
     const user: User = {
       id: data.id.toString(),
-      name: data.full_name,
+      full_name: data.full_name,
       email: data.email,
       // Adapt role to fit existing 'admin' | 'employee' type
-      role: data.role.toLowerCase() === 'admin' ? 'admin' : 'employee',
+      role: data.role.toLowerCase() === 'student' ? 'student' : 'lecturer',
       department: 'Unknown', // API doesn't provide department, default value
     };
 
@@ -59,5 +59,22 @@ export const authService = {
       safeStorage.removeItem('user');
     }
   },
+
+  // async getUserClaims(): Promise<User> {
+  //   try {
+  //     await fetch(`${API_BASE_URL}/`, { // Assuming a logout endpoint
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       credentials: 'include',
+  //     });
+  //   } catch (error) {
+  //     console.error('Cannot request profile failed:', error);
+  //     // Even if the backend call fails, we clear the frontend state
+  //   } finally {
+  //     safeStorage.removeItem('user');
+  //   }
+  // },
 };
 

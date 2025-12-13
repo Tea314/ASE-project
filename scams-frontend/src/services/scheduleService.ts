@@ -23,7 +23,12 @@ interface ApiSchedule {
   team_members: string | null;
   created_at: string;
 }
-
+export interface GetSchedulesParams {
+  date?: string;        // Format YYYY-MM-DD
+  room_id?: number;
+  lecturer_id?: number;
+  building_id?: number;
+}
 /**
  * Maps an API schedule object to the application's Booking type.
  * @param schedule The schedule object from the API.
@@ -53,6 +58,45 @@ function mapApiScheduleToBooking(schedule: ApiSchedule): Booking {
 }
 
 export const scheduleService = {
+  async getAllSchedules(params?: GetSchedulesParams): Promise<Booking[]> {
+    try {
+      // Xây dựng Query String từ params
+      const queryParams = new URLSearchParams();
+
+      if (params) {
+        if (params.date) queryParams.append('date', params.date);
+        if (params.room_id) queryParams.append('room_id', params.room_id.toString());
+        if (params.lecturer_id) queryParams.append('lecturer_id', params.lecturer_id.toString());
+        if (params.building_id) queryParams.append('building_id', params.building_id.toString());
+      }
+
+      const url = `${API_BASE_URL}/schedules/?${queryParams.toString()}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch schedules: ${response.statusText}`);
+      }
+
+      const data: ScheduleApiResponse = await response.json();
+
+      if (!data.schedules) {
+        return [];
+      }
+
+      return data.schedules.map(mapApiScheduleToBooking);
+
+    } catch (error) {
+      console.error('Error fetching all schedules:', error);
+      throw error;
+    }
+  },
   /**
    * Get all schedules for the currently logged-in user (lecturer).
    * GET /schedules/me
@@ -78,7 +122,7 @@ export const scheduleService = {
       }
 
       const data: ScheduleApiResponse = await response.json();
-      
+
       if (!data.schedules) {
         return [];
       }

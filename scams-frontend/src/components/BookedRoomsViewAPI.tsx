@@ -8,7 +8,6 @@ import {
   Search,
   Filter,
   Building2,
-  User,
   Briefcase,
   CalendarRange,
   Eye,
@@ -32,94 +31,90 @@ import { Alert, AlertDescription } from './ui/alert';
 import type { Room, Booking } from '../types';
 import { TiltCard } from './TiltCard';
 import { roomService } from '../services/roomService';
-
+import { scheduleService, type GetSchedulesParams } from '../services/scheduleService';
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarComponent } from "./ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./ui/popover";
 type ViewMode = 'grid' | 'timeline';
 type FilterStatus = 'all' | 'upcoming' | 'completed' | 'cancelled';
 
 interface BookedRoomsViewAPIProps {
-  bookings?: Booking[];
+  initialBookings?: Booking[];
 }
 
-// Mock data fallback
-const MOCK_ROOMS: Room[] = [
-  {
-    id: 1,
-    name: "Conference Room A",
-    image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=600&fit=crop",
-    floor_number: 1,
-    building_id: 1,
-    building_name: "A1 - Science Building",
-    capacity: 25,
-    devices: [
-      { id: 1, name: "Projector" },
-      { id: 2, name: "Whiteboard" },
-    ]
-  },
-  {
-    id: 2,
-    name: "Lecture Room 501",
-    image_url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=800&h=600&fit=crop",
-    floor_number: 5,
-    building_id: 2,
-    building_name: "B5 - General Lecture Hall",
-    capacity: 80,
-    devices: [
-      { id: 1, name: "Projector" },
-      { id: 3, name: "Smart Board" },
-      { id: 4, name: "50-inch Display" },
-    ]
-  },
-  {
-    id: 3,
-    name: "Seminar Room 203",
-    image_url: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&h=600&fit=crop",
-    floor_number: 2,
-    building_id: 1,
-    building_name: "A1 - Science Building",
-    capacity: 15,
-    devices: [
-      { id: 2, name: "Whiteboard" },
-    ]
-  },
-];
-
-export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
+export function BookedRoomsViewAPI({ initialBookings = [] }: BookedRoomsViewAPIProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const [bookingsList, setBookingsList] = useState<Booking[]>(initialBookings);
+
+  const [loadingRooms, setLoadingRooms] = useState(true);
+  const [loadingBookings, setLoadingBookings] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useMockData, setUseMockData] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState<string>('all');
   const [selectedBuilding, setSelectedBuilding] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
   const [selectedDate, setSelectedDate] = useState<string>('all');
 
-  // Fetch rooms on component mount
+  // --- Fetch Rooms ---
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setLoadingRooms(true);
         const fetchedRooms = await roomService.getAllRooms();
         setRooms(fetchedRooms);
-        setUseMockData(false);
       } catch (err) {
-        console.warn('API unavailable, using mock data:', err);
-        // Fallback to mock data if API is unavailable
-        setRooms(MOCK_ROOMS);
-        setUseMockData(true);
-        setError(null); // Clear error since we're using mock data
+        console.warn('Room API unavailable:', err);
+        setError('Could not load room details.');
       } finally {
-        setLoading(false);
+        setLoadingRooms(false);
       }
     };
 
     fetchRooms();
   }, []);
 
-  // Get unique values for filters
+  // --- Fetch Schedules (Bookings) ---
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      setLoadingBookings(true);
+      try {
+        const params: GetSchedulesParams = {};
+
+        // 1. Filter by Date
+        if (selectedDate !== 'all') {
+          params.date = selectedDate;
+        }
+
+        // 2. Filter by Building
+        if (selectedBuilding !== 'all') {
+          params.building_id = parseInt(selectedBuilding);
+        }
+
+        const data = await scheduleService.getAllSchedules(params);
+        setBookingsList(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch schedules', err);
+        setError('Failed to load bookings. Please try again.');
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchSchedules();
+  }, [selectedDate, selectedBuilding]);
+
+  // --- Derived Data for UI Filters ---
+
   const floors = useMemo(() => {
     const floorSet = new Set(rooms.map(room => room.floor_number.toString()));
     return Array.from(floorSet).sort((a, b) => parseInt(a) - parseInt(b));
@@ -134,21 +129,21 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
   }, [rooms]);
 
   const dates = useMemo(() => {
-    const dateSet = new Set(bookings.map(b => b.date));
+    const dateSet = new Set(bookingsList.map(b => b.date));
+    dateSet.add(new Date().toISOString().split('T')[0]);
     return Array.from(dateSet).sort();
-  }, [bookings]);
+  }, [bookingsList]);
 
-  // Get room by ID helper
-  const getRoomById = (roomId: number): Room | undefined => {
-    return rooms.find(r => r.id === roomId);
+  const getRoomById = (roomId: number | string): Room | undefined => {
+    return rooms.find(r => r.id.toString() === roomId.toString());
   };
 
-  // Filter bookings
+  // --- Client-side Filtering ---
   const filteredBookings = useMemo(() => {
-    return bookings.filter(booking => {
+    return bookingsList.filter(booking => {
       const room = getRoomById(booking.roomId);
 
-      // Search filter
+      // Search filter (Client side)
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery ||
         booking.roomName.toLowerCase().includes(searchLower) ||
@@ -157,25 +152,18 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
         booking.userDepartment?.toLowerCase().includes(searchLower) ||
         room?.building_name.toLowerCase().includes(searchLower);
 
-      // Floor filter
       const matchesFloor = selectedFloor === 'all' ||
         room?.floor_number.toString() === selectedFloor;
 
-      // Building filter
-      const matchesBuilding = selectedBuilding === 'all' ||
-        room?.building_id.toString() === selectedBuilding;
-
-      // Status filter
       const matchesStatus = selectedStatus === 'all' || booking.status === selectedStatus;
 
-      // Date filter
+      const matchesBuilding = selectedBuilding === 'all' || room?.building_id.toString() === selectedBuilding;
       const matchesDate = selectedDate === 'all' || booking.date === selectedDate;
 
-      return matchesSearch && matchesFloor && matchesBuilding && matchesStatus && matchesDate;
+      return matchesSearch && matchesFloor && matchesStatus && matchesBuilding;
     });
-  }, [searchQuery, selectedFloor, selectedBuilding, selectedStatus, selectedDate, bookings, rooms]);
+  }, [searchQuery, selectedFloor, selectedBuilding, selectedStatus, selectedDate, bookingsList, rooms]);
 
-  // Group bookings by date for timeline view
   const groupedByDate = useMemo(() => {
     const groups: { [key: string]: Booking[] } = {};
     filteredBookings.forEach(booking => {
@@ -189,25 +177,16 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'upcoming':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'completed':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'cancelled':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case 'upcoming': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const formatTime = (time: string) => {
@@ -218,30 +197,16 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state (Initial load)
+  if (loadingRooms && bookingsList.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-12 bg-background/40 backdrop-blur-xl border-white/10">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
-            <p className="text-muted-foreground">Loading rooms...</p>
+            <p className="text-muted-foreground">Loading system data...</p>
           </div>
         </Card>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Alert className="max-w-md bg-red-500/10 border-red-500/30">
-          <AlertCircle className="h-4 w-4 text-red-400" />
-          <AlertDescription className="text-red-400">
-            {error}
-          </AlertDescription>
-        </Alert>
       </div>
     );
   }
@@ -252,37 +217,19 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
         <motion.div
           className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.5, 0.3, 0.5],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.3, 0.5] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
       </div>
 
       <div className="relative z-10 p-6 space-y-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
           <div className="flex items-center gap-3">
             <motion.div
               className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-xl border border-white/10"
@@ -296,12 +243,18 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                 Booked Rooms
                 <Sparkles className="w-6 h-6 text-yellow-400" />
               </h1>
-              <p className="text-muted-foreground">
-                View all room bookings across the organization
-              </p>
+              <p className="text-muted-foreground">View all room bookings across the organization</p>
             </div>
           </div>
         </motion.div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert className="bg-red-500/10 border-red-500/30 mb-4">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-400">{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Filters Section */}
         <motion.div
@@ -324,6 +277,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
 
               {/* Filter Grid */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Building Filter - Triggers API call */}
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">Building</label>
                   <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
@@ -341,6 +295,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                   </Select>
                 </div>
 
+                {/* Floor Filter - Client side */}
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">Floor</label>
                   <Select value={selectedFloor} onValueChange={setSelectedFloor}>
@@ -358,6 +313,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                   </Select>
                 </div>
 
+                {/* Status Filter - Client side */}
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">Status</label>
                   <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as FilterStatus)}>
@@ -373,21 +329,44 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                   </Select>
                 </div>
 
+                {/* Date Filter - Triggers API call */}
                 <div>
                   <label className="text-sm text-muted-foreground mb-2 block">Date</label>
-                  <Select value={selectedDate} onValueChange={setSelectedDate}>
-                    <SelectTrigger className="bg-background/50 border-white/10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Dates</SelectItem>
-                      {dates.map(date => (
-                        <SelectItem key={date} value={date}>
-                          {formatDate(date)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-background/50 border-white/10",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {selectedDate && selectedDate !== 'all' ? (
+                          format(new Date(selectedDate), "PPP")
+                        ) : (
+                          <span>Today (Default)</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate === 'all' ? undefined : new Date(selectedDate)}
+                        onSelect={(date) => {
+                          if (date) {
+                            setSelectedDate(format(date, "yyyy-MM-dd"));
+                          } else {
+                            setSelectedDate('all');
+                          }
+                        }}
+                        initialFocus
+                        disabled={(date) =>
+                          date < new Date("1900-01-01")
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -396,7 +375,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    Showing {filteredBookings.length} of {bookings.length} bookings
+                    {loadingBookings ? 'Updating...' : `Showing ${filteredBookings.length} bookings`}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -424,7 +403,17 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
 
         {/* Content Area */}
         <AnimatePresence mode="wait">
-          {viewMode === 'grid' && (
+          {loadingBookings ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex justify-center py-20"
+            >
+              <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+            </motion.div>
+          ) : viewMode === 'grid' ? (
             <motion.div
               key="grid"
               initial={{ opacity: 0 }}
@@ -542,9 +531,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                 );
               })}
             </motion.div>
-          )}
-
-          {viewMode === 'timeline' && (
+          ) : (
             <motion.div
               key="timeline"
               initial={{ opacity: 0 }}
@@ -630,10 +617,6 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                                         </div>
                                       </>
                                     )}
-                                    <div className="flex items-center gap-2">
-                                      <Briefcase className="w-4 h-4 text-orange-400" />
-                                      <span>{booking.userDepartment}</span>
-                                    </div>
                                   </div>
 
                                   <div className="flex items-center gap-2">
@@ -652,16 +635,6 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                                     </div>
                                   </div>
                                 </div>
-
-                                {room && (
-                                  <motion.img
-                                    src={roomService.getRoomImage(room)}
-                                    alt={booking.roomName}
-                                    className="w-24 h-24 object-cover rounded-xl border border-white/10"
-                                    whileHover={{ scale: 1.05 }}
-                                    transition={{ type: 'spring', stiffness: 300 }}
-                                  />
-                                )}
                               </div>
                             </Card>
                           </motion.div>
@@ -672,7 +645,7 @@ export function BookedRoomsViewAPI({ bookings = [] }: BookedRoomsViewAPIProps) {
                 </motion.div>
               ))}
 
-              {filteredBookings.length === 0 && (
+              {filteredBookings.length === 0 && !loadingBookings && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
